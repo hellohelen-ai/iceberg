@@ -31,7 +31,7 @@ install_claude() {
   echo "  run these two commands in Claude Code:"
   echo "    /plugin marketplace add hellohelen-ai/iceberg"
   echo "    /plugin install iceberg@iceberg"
-  echo "  (or use the 'agents' target for a plain CLAUDE.md block)"
+  echo "  or, for 30+ agents:  npx skills add hellohelen-ai/iceberg"
 }
 
 install_target() {

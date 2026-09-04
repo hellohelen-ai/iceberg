@@ -1,11 +1,17 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "iceberg",
-  "owner": { "name": "David Hanlon" },
+  "description": "Make your coding agent laconic. One-line answers, a four-line ceiling, no summary blocks.",
+  "owner": {
+    "name": "hellohelen-ai",
+    "url": "https://github.com/hellohelen-ai"
+  },
   "plugins": [
     {
       "name": "iceberg",
+      "description": "Show 1/8, keep 7/8 below the surface. Terse output, full technical accuracy.",
       "source": "./",
-      "description": "Makes your coding agent laconic. One-line answers, no walls of text."
+      "category": "productivity"
     }
   ]
 }
