@@ -52,7 +52,7 @@
 
 Same fix. Same files. The only thing that died was the throat-clearing.
 
-**84% fewer output tokens** than telling your agent `Answer concisely.` — measured over 15 real prompts, not estimated. [The harness is in `evals/`](./evals), and it prints the unflattering numbers too.
+**5.7× shorter replies** than your agent gives you today — measured over 15 real prompts, three runs, not estimated. [The harness is in `evals/`](./evals), and it prints the unflattering numbers too.
 
 Code, commands, file paths, and exact error strings are never compressed. Only the prose around them is.
 
@@ -132,21 +132,36 @@ So `install.sh cursor` lays down two layers: the `alwaysApply` rule, which the e
 
 ## Does it work
 
-15 prompts, three arms, Sonnet. Token counts straight from `usage.output_tokens`.
+Start from what your agent does today with no instructions at all. Call that
+**538 tokens** — the average reply across 15 real dev questions, three runs, on
+Sonnet.
 
-| Arm | System prompt | Mean output tokens |
+Now add a system prompt and measure again:
+
+| What you tell the agent | Mean reply | vs. doing nothing |
 |---|---|---|
-| baseline | none | 367 |
-| terse | `Answer concisely.` | 524 |
-| **iceberg** | `Answer concisely.` + the rules | **84** |
+| nothing | 538 tokens | — |
+| `Answer concisely.` | 749 tokens | **39% longer** |
+| iceberg's 7 rules | **94 tokens** | **5.7× shorter** |
 
-84% under `terse`, and that is the lowest of three runs — the other two came back 88% and 89%.
+Two things fall out of that table.
 
-The number to read is iceberg vs terse, not iceberg vs baseline — anyone can type "be concise" for free, so that is the bar.
+**Asking for concision backfires.** `Answer concisely.` produced *more* text than
+saying nothing, in all three runs. "Concisely" is an adjective with no target, so
+the model keeps the heading, the numbered list, and the closing offer — it just
+feels brisk while writing them.
 
-And note the middle row: **`Answer concisely.` came out 43% longer than saying nothing at all.** A vague ask for brevity does not get you brevity. A line ceiling does.
+**Rules work where adjectives don't.** A four-line ceiling, a required shape, and
+a named thing to omit get you 5.7× shorter than baseline, and 8× shorter than the
+concision ask most people reach for first.
 
-Reproduce it: `python3 evals/run.py` — about $1.60 on Sonnet.
+Token counts come straight from `usage.output_tokens`. Every raw reply is in
+`evals/snapshot.json`. Reproduce it with `python3 evals/run.py` — about $2 on
+Sonnet.
+
+Caveat worth reading: absolute counts swing hard between runs (baseline came back
+367, 650, 596 on identical inputs). The ratios held. [`evals/README.md`](./evals)
+shows all three runs and the ~93% rule-compliance rate.
 
 ## Customize
 
