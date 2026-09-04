@@ -1,0 +1,11 @@
+{
+  "name": "iceberg",
+  "owner": { "name": "David Hanlon" },
+  "plugins": [
+    {
+      "name": "iceberg",
+      "source": "./",
+      "description": "Makes your coding agent laconic. One-line answers, no walls of text."
+    }
+  ]
+}

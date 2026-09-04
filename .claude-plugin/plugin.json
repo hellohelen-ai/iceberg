@@ -1,0 +1,8 @@
+{
+  "name": "iceberg",
+  "description": "Makes your coding agent laconic. One-line answers, no walls of text. The work stays below the surface.",
+  "version": "0.1.0",
+  "author": { "name": "David Hanlon" },
+  "homepage": "https://github.com/hellohelen-ai/iceberg",
+  "keywords": ["output-style", "verbosity", "concise", "brevity", "dx"]
+}
