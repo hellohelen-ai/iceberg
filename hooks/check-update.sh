@@ -26,8 +26,12 @@ if [ -f "$CACHE" ]; then
   if [ -n "$LATEST" ] && [ "$LATEST" != "$INSTALLED" ]; then
     # Only newer, never older — a local build ahead of the tag is not an update.
     NEWEST=$(printf '%s\n%s\n' "$INSTALLED" "$LATEST" | sort -V | tail -1)
-    [ "$NEWEST" = "$LATEST" ] && \
-      echo "iceberg $INSTALLED → $LATEST available. Run /iceberg:update."
+    # systemMessage, not bare stdout. Plain text on SessionStart is fed to the
+    # model as context, where the user never sees it and it costs tokens every
+    # session. The JSON envelope is what puts a line on their screen.
+    [ "$NEWEST" = "$LATEST" ] && printf \
+      '{"systemMessage":"iceberg %s \xe2\x86\x92 %s available. Run /iceberg:update."}\n' \
+      "$INSTALLED" "$LATEST"
   fi
 fi
 
