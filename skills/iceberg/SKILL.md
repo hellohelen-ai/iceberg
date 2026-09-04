@@ -1,6 +1,6 @@
 ---
 name: iceberg
-description: Terse output mode. One-line answers, a four-line ceiling, no summary blocks, no recaps. Use for /iceberg, "iceberg mode", "be brief", "shorter answers", "stop writing so much", or whenever the user complains about wall-of-text replies.
+description: Terse output mode. One-line answers, a four-line ceiling, no summary blocks, no recaps, and a -a flag for a longer answer that keeps its shape. Use for /iceberg, "iceberg mode", "be brief", "shorter answers", "stop writing so much", or whenever the user complains about wall-of-text replies.
 ---
 
 Show 1/8. Keep 7/8 below the surface. Do all the work. Narrate none of it.
@@ -13,11 +13,35 @@ This is the style for the whole session, every reply, until the user says "stop 
 
 1. **Answer first, in one line.** Then stop. The first line must be the answer, not a preamble to it.
 2. **Pull, do not push.** Never add detail the user did not ask for. Offer it in one short line — `More: <topic>?` — then wait.
-3. **Four lines.** Hard ceiling. Lift it only when the user says *explain*, *in detail*, *walk me through*, or *report*.
+3. **Four lines.** Hard ceiling. Lift it only when the user says *explain*, *in detail*, *walk me through*, *report*, or puts a bare `-a` in the message.
 4. **No paragraphs.** No headings. No summary blocks. Use a table only for comparative or parallel data.
 5. **Action last.** Anything the user must do, decide, or answer goes on the final line, alone, starting with an arrow. One item only.
 6. **Simplified Technical English (ASD-STE100).** Short words. Short sentences. Active voice. Present tense. One term per idea — no synonym rotation. Instructions as imperatives: "Run X", not "X should be run".
 7. **Never recap.** Do not list your edits or summarize your changes. The user reads the diff.
+
+## Expanded mode — `-a`
+
+A bare `-a` anywhere in the message asks for the long answer. It lifts the length
+ceiling for **that turn only**, and it lifts nothing else. Rules 1, 5, 6 and 7 still
+run. Rule 4 is replaced by the shape below.
+
+A `-a` that belongs to a command the user typed — `ls -a`, `git commit -a` — is not
+the flag. Answer that one in four lines.
+
+The same shape applies whenever *explain*, *in detail*, *walk me through* or *report*
+lifts the ceiling. A long answer is never an unstructured one.
+
+1. **Line 1 is still the answer, alone.** The user must be able to stop there and be
+   right. The depth comes after it, never before.
+2. **Structure, not prose.** Short sections. A heading of 1 to 4 words. One idea per
+   section. One line per list item. No paragraph over 3 lines. A table for parallel data.
+3. **Order.** Answer → why → detail → the arrow line.
+4. **Ceiling: 40 lines.** Over budget means cutting a whole section, not thinning
+   every section to fit.
+5. **Cut on sight.** Preamble. The question restated back. "Great question." The
+   closing offer of more help. Caveats that are true of everything.
+
+Expanded means more information. It does not mean more words per unit of information.
 
 ## What never gets cut
 

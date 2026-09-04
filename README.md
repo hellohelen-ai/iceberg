@@ -11,7 +11,7 @@
   <a href="#see-it">See it</a> ·
   <a href="#install">Install</a> ·
   <a href="#the-rules">Rules</a> ·
-  <a href="#lifting-the-limit">Lift the limit</a> ·
+  <a href="#when-you-do-want-the-long-version--a">The <code>-a</code> flag</a> ·
   <a href="#customize">Customize</a>
 </p>
 
@@ -121,16 +121,51 @@ Re-runnable. `~/iceberg/uninstall.sh` removes every block it added.
 | 5 | Action last, on its own line, one item. |
 | 6 | Simplified Technical English. Short words, active voice. |
 | 7 | Never recap the diff. |
+| 8 | A long answer still has a shape. |
 
 Rule 5 is the one people underestimate. If you must do something, it is the last thing you read — not buried in paragraph three.
 
-## Lifting the limit
+## When you do want the long version — `-a`
 
-Four words turn it off for one turn:
+Sometimes four lines is not enough. Put a bare `-a` anywhere in your message and
+you get the long answer for **that turn only**:
+
+```
+why does this deadlock -a
+```
+
+`-a` lifts the length ceiling. It lifts nothing else. You still get the answer on
+line 1 — you can stop reading there and be right — and you still get the one
+action, alone, on the last line. What changes is what sits between them:
+
+| | Normal | `-a` |
+|---|---|---|
+| Line 1 | the answer | the answer |
+| Ceiling | 4 lines | 40 lines |
+| Headings | banned | 1–4 words, one idea each |
+| Paragraphs | banned | 3 lines, max |
+| Last line | the action | the action |
+
+So the long version is *structured*, not *loose*. Preamble, your own question
+restated back at you, "great question", and the closing offer of more help are cut
+in both modes. **Expanded means more information — not more words per unit of
+information.**
+
+The same shape now applies to the four words that already lifted the ceiling:
 
 **explain** · **in detail** · **walk me through** · **report**
 
 Say *"stop iceberg"* or *"normal mode"* to end it for the session.
+
+**How the plugin does it.** The `UserPromptSubmit` hook reads your message and
+*swaps* the injected rules — `prompt.md` on a normal turn, `expand.md` on a `-a`
+turn. It never injects both. Terse rules and expanded rules contradict each other
+on purpose, so only one of them is ever in the context.
+
+One known collision: `-a` is a real flag, so *"run `git commit -a`"* trips the
+match. The hook hands the model `expand.md`, and `expand.md`'s last line tells it
+to fall back to four lines when the `-a` belongs to a command. The cost of a false
+positive is a few tokens, never a wrong answer.
 
 ## What never gets cut
 
@@ -149,9 +184,14 @@ Numbers, units, code blocks, and error strings stay verbatim.
 | `install.sh windsurf` | Windsurf | yes |
 | `install.sh copilot` | Copilot | read once |
 
+Only the two `UserPromptSubmit` rows can swap rule files mid-session, so only they
+get the strong form of `-a`. Everywhere else `-a` is rule 8 of the static block —
+same behaviour, weaker grip, because the four-line rules stay in the context
+alongside it.
+
 Per-turn beats read-once. A static instruction file sits a hundred messages back in the context by the time it matters.
 
-Codex hooks take the same shape as Claude Code's, and its `UserPromptSubmit` adds plain stdout to the context. Both call the same `hooks/inject.sh`, which resolves `prompt.md` from its own location — so neither has to interpolate a root variable into a `cat` argument. `install.sh codex` writes a `.codex/hooks.json` as well as the `AGENTS.md` block.
+Codex hooks take the same shape as Claude Code's, and its `UserPromptSubmit` adds plain stdout to the context. Both call the same `hooks/inject.sh`, which resolves the rule file — `prompt.md`, or `expand.md` on a `-a` turn — from its own location, so neither has to interpolate a root variable into a `cat` argument. `install.sh codex` writes a `.codex/hooks.json` as well as the `AGENTS.md` block.
 
 Cursor is the exception. It has no `UserPromptSubmit`; `beforeSubmitPrompt` fires every turn but returns only `continue` and `user_message`, so it can block your prompt and never add to it. Only `sessionStart` and `postToolUse` can return `additional_context`.
 
@@ -186,6 +226,9 @@ a named thing to omit get you replies 83% shorter than your agent's default — 
 Token counts come straight from `usage.output_tokens`. Every raw reply is in
 `evals/snapshot.json`. Reproduce it with `python3 evals/run.py` — about $2 on
 Sonnet.
+
+Those numbers cover the four-line path. `-a` is not in the eval yet — it is a
+different job, and counting its tokens against the terse arm would measure nothing.
 
 Caveat worth reading: absolute counts swing hard between runs (baseline came back
 367, 650, 596 on identical inputs). The ratios held. [`evals/README.md`](./evals)
@@ -223,12 +266,14 @@ disk on every turn, so nothing is cached.
 
 ## Customize
 
-Two files, and they say the same thing:
+Three files, and they say the same thing in three lengths:
 
-- `prompt.md` — the short form the Claude Code hook injects every turn
+- `prompt.md` — the short form the hook injects on a normal turn
+- `expand.md` — what the hook injects instead on a `-a` turn
 - `skills/iceberg/SKILL.md` — the long form an agent loads on demand
 
-Edit either. Change the line limit, drop rule 5, add your own. That is the whole product.
+Edit any of them. Change the line limit, drop rule 5, move `-a` to `-v`, add your
+own. That is the whole product.
 
 ## Why "iceberg"
 
