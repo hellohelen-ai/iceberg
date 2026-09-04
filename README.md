@@ -116,13 +116,17 @@ Numbers, units, code blocks, and error strings stay verbatim.
 | Method | Agents | Re-injected every turn |
 |---|---|---|
 | `npx skills add` | 17 | on demand |
-| Claude Code plugin | Claude Code | yes |
-| `install.sh cursor` | Cursor | yes (`alwaysApply`) |
+| Claude Code plugin | Claude Code | yes — `UserPromptSubmit` hook |
+| `install.sh codex` | Codex | yes — `UserPromptSubmit` hook |
+| `install.sh cursor` | Cursor | yes — `alwaysApply` rule |
 | `install.sh windsurf` | Windsurf | yes |
-| `install.sh codex` | Codex | read once |
 | `install.sh copilot` | Copilot | read once |
 
 Per-turn beats read-once. A static instruction file sits a hundred messages back in the context by the time it matters.
+
+Codex hooks take the same shape as Claude Code's, and its `UserPromptSubmit` adds plain stdout to the context — so `install.sh codex` writes a `.codex/hooks.json` as well as the `AGENTS.md` block.
+
+Cursor is the exception. Its `beforeSubmitPrompt` hook fires every turn but cannot inject context; only `sessionStart` can, and that runs once. So Cursor gets an `alwaysApply` rule instead, which the editor re-sends anyway.
 
 ## Does it work
 

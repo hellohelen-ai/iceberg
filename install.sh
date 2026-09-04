@@ -34,10 +34,34 @@ install_claude() {
   echo "  or, for 30+ agents:  npx skills add hellohelen-ai/iceberg"
 }
 
+# Codex reads the same shape of hook as Claude Code, and its UserPromptSubmit
+# adds plain stdout to the context. So Codex gets per-turn injection too, not
+# just a file it reads once at session start.
+write_codex_hook() {
+  mkdir -p .codex
+  cat > .codex/hooks.json <<JSON
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat '$PROMPT'"
+          }
+        ]
+      }
+    ]
+  }
+}
+JSON
+  echo "  updated .codex/hooks.json (injected every turn)"
+}
+
 install_target() {
   case "$1" in
     claude)   install_claude ;;
-    codex)    echo "codex:";    write_block "AGENTS.md" ;;
+    codex)    echo "codex:";    write_codex_hook; write_block "AGENTS.md" ;;
     agents)   echo "agents.md:"; write_block "AGENTS.md" ;;
     cursor)   echo "cursor:";   mkdir -p .cursor/rules; cp "$HERE/adapters/cursor.mdc" .cursor/rules/iceberg.mdc; echo "  updated .cursor/rules/iceberg.mdc" ;;
     windsurf) echo "windsurf:"; write_block ".windsurf/rules/iceberg.md" ;;

@@ -11,5 +11,12 @@ for f in AGENTS.md CLAUDE.md .windsurf/rules/iceberg.md .github/copilot-instruct
   mv "$f.tmp" "$f"
   echo "cleaned $f"
 done
-rm -f .cursor/rules/iceberg.mdc && echo "removed .cursor/rules/iceberg.mdc" || true
+if [ -f .cursor/rules/iceberg.mdc ]; then
+  rm -f .cursor/rules/iceberg.mdc && echo "removed .cursor/rules/iceberg.mdc"
+fi
+
+# Only remove the Codex hook file if it is ours and holds nothing else.
+if [ -f .codex/hooks.json ] && grep -q "iceberg\|prompt.md" .codex/hooks.json; then
+  rm -f .codex/hooks.json && echo "removed .codex/hooks.json"
+fi
 echo "done."
