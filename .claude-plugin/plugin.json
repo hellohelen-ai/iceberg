@@ -13,7 +13,6 @@
     "brevity",
     "dx"
   ],
-  "hooks": "./hooks/hooks.json",
   "repository": "https://github.com/hellohelen-ai/iceberg",
   "license": "MIT"
 }
