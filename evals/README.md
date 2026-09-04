@@ -42,7 +42,7 @@ and inflates the number. Both are printed; only the first one is the claim.
 
 - **84% fewer output tokens than `Answer concisely.`**
 - 77% fewer than no system prompt at all
-- 0 of 15 replies broke the four-line limit
+- 15 of 15 replies held the four-line limit *in this run* — see Compliance
 
 ## "Answer concisely." made it worse
 
@@ -58,13 +58,22 @@ One run, one model, 15 prompts. Take it as a strong hint, not a law.
 
 ## Variance
 
-Absolute token counts move a lot between runs. A second pass of the same 15
-prompts put `baseline` at 650 mean instead of 367, and `terse` at 847 instead of
-524 — the models are not deterministic and neither is their appetite for
+Absolute token counts move a lot between runs. The ratio does not.
+
+| Run | baseline | terse | iceberg | iceberg vs terse | terse vs baseline |
+|---|---|---|---|---|---|
+| 1 | 367 | 524 | 84 | 84% | +43% |
+| 2 | 650 | 847 | 93 | 89% | +30% |
+| 3 | 596 | 877 | 104 | 88% | +47% |
+
+Same 15 prompts, same model, three runs. `baseline` nearly doubled between run 1
+and run 2; the models are not deterministic and neither is their appetite for
 headings.
 
-The *ratio* held: 84% in the first run, 89% in the second. The published claim
-is the lower one. Re-run it yourself before quoting a different figure.
+The published claim is 84% — the lowest of the three. The backfire is quoted as
+a range, 30–47%, because a single figure there would be false precision.
+
+Re-run it before quoting a number of your own.
 
 ## Comparing against another skill
 
@@ -79,9 +88,18 @@ job, and the shorter one is not automatically better.
 
 ## Compliance
 
-`prose_lines()` in `run.py` counts what the limit covers. Fenced code blocks
-and table rows are exempt — rule 4 permits a table for parallel data, and a
-truncated SQL statement helps no one.
+`prose_lines()` in `run.py` counts what the limit covers. Fenced code blocks and
+table rows are exempt — rule 4 permits a table for parallel data, and a truncated
+SQL statement helps no one.
+
+Across the three runs: 0, 1, and 2 replies over the limit out of 15. Call it
+~93% compliance, not 100%. The misses are all the same shape — the model answers
+in one line, then adds a bullet list of causes. It keeps the required shape and
+breaks the ceiling.
+
+Fixing that means either tightening rule 3 to name bullets explicitly, or
+accepting that a four-item cause list is a fair use of the budget. It is not
+fixed today, and the number above says so.
 
 ## Adding prompts
 

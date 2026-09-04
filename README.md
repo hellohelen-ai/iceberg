@@ -140,7 +140,7 @@ So `install.sh cursor` lays down two layers: the `alwaysApply` rule, which the e
 | terse | `Answer concisely.` | 524 |
 | **iceberg** | `Answer concisely.` + the rules | **84** |
 
-84% under `terse`. 0 of 15 replies broke the four-line limit.
+84% under `terse`, and that is the lowest of three runs — the other two came back 88% and 89%.
 
 The number to read is iceberg vs terse, not iceberg vs baseline — anyone can type "be concise" for free, so that is the bar.
 
