@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "iceberg",
-  "description": "Make your coding agent laconic. One-line answers, a four-line ceiling, no summary blocks.",
+  "description": "Make your coding agent laconic. 84% fewer output tokens than 'Answer concisely.' (measured), full technical accuracy.",
   "owner": {
     "name": "hellohelen-ai",
     "url": "https://github.com/hellohelen-ai"

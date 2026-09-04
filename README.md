@@ -52,6 +52,8 @@
 
 Same fix. Same files. The only thing that died was the throat-clearing.
 
+**84% fewer output tokens** than telling your agent `Answer concisely.` — measured over 15 real prompts, not estimated. [The harness is in `evals/`](./evals), and it prints the unflattering numbers too.
+
 Code, commands, file paths, and exact error strings are never compressed. Only the prose around them is.
 
 ## Install
@@ -121,6 +123,24 @@ Numbers, units, code blocks, and error strings stay verbatim.
 | `install.sh copilot` | Copilot | read once |
 
 Per-turn beats read-once. A static instruction file sits a hundred messages back in the context by the time it matters.
+
+## Does it work
+
+15 prompts, three arms, Sonnet. Token counts straight from `usage.output_tokens`.
+
+| Arm | System prompt | Mean output tokens |
+|---|---|---|
+| baseline | none | 367 |
+| terse | `Answer concisely.` | 524 |
+| **iceberg** | `Answer concisely.` + the rules | **84** |
+
+84% under `terse`. 0 of 15 replies broke the four-line limit.
+
+The number to read is iceberg vs terse, not iceberg vs baseline — anyone can type "be concise" for free, so that is the bar.
+
+And note the middle row: **`Answer concisely.` came out 43% longer than saying nothing at all.** A vague ask for brevity does not get you brevity. A line ceiling does.
+
+Reproduce it: `python3 evals/run.py` — about $1.60 on Sonnet.
 
 ## Customize
 

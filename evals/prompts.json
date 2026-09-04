@@ -1,0 +1,17 @@
+[
+  {"id": "react-rerender", "prompt": "Why is my React component re-rendering on every parent update?"},
+  {"id": "git-undo-commit", "prompt": "How do I undo the last git commit but keep the changes staged?"},
+  {"id": "ts-satisfies", "prompt": "What is the difference between `as const` and `satisfies` in TypeScript?"},
+  {"id": "docker-layer", "prompt": "My Docker build is slow because it reinstalls dependencies every time. How do I fix the layer caching?"},
+  {"id": "pg-index", "prompt": "A Postgres query on a 2M row table takes 4 seconds. It filters on user_id and orders by created_at. What index should I add?"},
+  {"id": "async-race", "prompt": "I have two async functions that both write to the same record and sometimes the second write is lost. What is happening?"},
+  {"id": "cors-error", "prompt": "My browser says 'blocked by CORS policy: No Access-Control-Allow-Origin header'. My server sets the header. Why is it still failing?"},
+  {"id": "node-memory", "prompt": "My Node process memory grows until it crashes. Where do I start looking?"},
+  {"id": "css-center", "prompt": "What is the cleanest way to center a div vertically and horizontally in 2026?"},
+  {"id": "jwt-storage", "prompt": "Should I store my JWT in localStorage or an httpOnly cookie?"},
+  {"id": "python-gil", "prompt": "Will threading speed up my CPU-bound Python script?"},
+  {"id": "rebase-vs-merge", "prompt": "Should my team use rebase or merge for feature branches?"},
+  {"id": "n-plus-one", "prompt": "My API endpoint makes 200 database queries for one request. What is this called and how do I fix it?"},
+  {"id": "test-flaky", "prompt": "One of my tests fails maybe 1 in 20 runs in CI but never locally. How do I debug it?"},
+  {"id": "env-secret-leak", "prompt": "I accidentally committed an API key and pushed it. What do I do?"}
+]

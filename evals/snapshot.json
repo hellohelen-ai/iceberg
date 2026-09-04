@@ -1,0 +1,325 @@
+{
+  "model": "sonnet",
+  "arms": [
+    "baseline",
+    "terse",
+    "iceberg"
+  ],
+  "results": [
+    {
+      "id": "react-rerender",
+      "arm": "baseline",
+      "output_tokens": 416,
+      "cost_usd": 0.09269625000000001,
+      "text": "By default, React re-renders a child component whenever its parent re-renders \u2014 even if the child's props haven't changed. The three most common causes:\n\n**1. No memoization**\nWrap the component in `React.memo` to skip re-renders when props are shallowly equal:\n```js\nexport default React.memo(MyComponent);\n```\n\n**2. New object/array/function references on every render**\n`React.memo` does a shallow comparison, so these defeat it:\n```js\n// Bad \u2014 new object every render\n<Child config={{ theme: 'dark' }} />\n\n// Fix \u2014 memoize the value\nconst config = useMemo(() => ({ theme: 'dark' }), []);\n<Child config={config} />\n```\n\nSame issue with inline callbacks \u2014 wrap them in `useCallback`:\n```js\nconst handleClick = useCallback(() => doThing(id), [id]);\n```\n\n**3. State/context that lives too high**\nIf the parent holds state that changes frequently and your component sits below it, every state change triggers a cascade. Move state down closer to where it's used, or split context into smaller pieces.\n\n**Quick diagnosis:** Drop `console.log('render')` in the component, then check what's actually changing. React DevTools Profiler (\"Why did this render?\") is even better \u2014 it shows exactly which prop or hook changed.\n\nThe fix order I'd recommend: check for unnecessary reference churn first (cheapest fix), then `memo` + `useCallback`/`useMemo`, then consider restructuring if state is too high."
+    },
+    {
+      "id": "react-rerender",
+      "arm": "terse",
+      "output_tokens": 629,
+      "cost_usd": 0.0359475,
+      "text": "## Why Your React Component Re-renders on Every Parent Update\n\nBy default, **React re-renders a child component whenever its parent re-renders**, regardless of whether the child's props changed. Here are the most common causes and fixes:\n\n---\n\n### \ud83d\udd0d Root Causes\n\n**1. Component not memoized**\n```jsx\n// \u274c Re-renders every time Parent renders\nconst Child = ({ name }) => <div>{name}</div>;\n\n// \u2705 Only re-renders if `name` changes\nconst Child = React.memo(({ name }) => <div>{name}</div>);\n```\n\n**2. New object/array reference on every render**\n```jsx\n// \u274c New object created each render \u2192 memo won't help\n<Child config={{ theme: 'dark' }} />\n\n// \u2705 Stable reference\nconst config = useMemo(() => ({ theme: 'dark' }), []);\n<Child config={config} />\n```\n\n**3. Inline callback functions**\n```jsx\n// \u274c New function reference each render\n<Child onClick={() => doSomething()} />\n\n// \u2705 Stable function reference\nconst handleClick = useCallback(() => doSomething(), []);\n<Child onClick={handleClick} />\n```\n\n**4. State/context too high up**\nIf a context value changes, **all consumers re-render**. Split contexts by concern or memoize the value:\n```jsx\nconst value = useMemo(() => ({ user, theme }), [user, theme]);\n```\n\n---\n\n### \ud83d\udee0 Debugging Tips\n\n- Use **React DevTools Profiler** \u2192 \"Why did this render?\" to pinpoint the cause.\n- Use the [`why-did-you-render`](https://github.com/welldone-software/why-did-you-render) library for automatic logging.\n\n---\n\n### Quick Checklist\n\n| Cause | Fix |\n|---|---|\n| Unmemoized component | `React.memo()` |\n| Inline object/array props | `useMemo()` |\n| Inline function props | `useCallback()` |\n| Context changes too often | Split or memoize context value |\n| State too high in the tree | Move state closer to where it's used |\n\nThe most impactful fix is usually **`React.memo` + `useCallback`** together \u2014 `memo` alone won't help if the function props are recreated each render."
+    },
+    {
+      "id": "react-rerender",
+      "arm": "iceberg",
+      "output_tokens": 77,
+      "cost_usd": 0.030077249999999996,
+      "text": "By default, every child re-renders when its parent re-renders, even if props did not change.\n\nMore: fix with `React.memo`, `useMemo`, or `useCallback`?"
+    },
+    {
+      "id": "git-undo-commit",
+      "arm": "baseline",
+      "output_tokens": 37,
+      "cost_usd": 0.08703074999999999,
+      "text": "```\ngit reset --soft HEAD~1\n```\n\nThis moves the branch pointer back one commit while leaving your changes in the staging area, ready to recommit."
+    },
+    {
+      "id": "git-undo-commit",
+      "arm": "terse",
+      "output_tokens": 184,
+      "cost_usd": 0.029292,
+      "text": "```bash\ngit reset --soft HEAD~1\n```\n\nThis moves `HEAD` back one commit while leaving all the changes **staged** (in the index), ready to be re-committed.\n\n**Quick reference for the 3 reset modes:**\n\n| Command | Commit undone | Changes staged | Working tree |\n|---|---|---|---|\n| `--soft HEAD~1` | \u2705 | \u2705 kept staged | unchanged |\n| `--mixed HEAD~1` | \u2705 | \u274c unstaged | unchanged |\n| `--hard HEAD~1` | \u2705 | \u274c | \u274c **deleted** |"
+    },
+    {
+      "id": "git-undo-commit",
+      "arm": "iceberg",
+      "output_tokens": 12,
+      "cost_usd": 0.028328250000000003,
+      "text": "`git reset --soft HEAD~1`"
+    },
+    {
+      "id": "ts-satisfies",
+      "arm": "baseline",
+      "output_tokens": 537,
+      "cost_usd": 0.03799105,
+      "text": "They solve different problems and compose well together.\n\n## `as const`\n\nNarrows types to their literal values and makes everything `readonly`.\n\n```typescript\nconst config = {\n  env: \"production\",\n  port: 3000,\n} as const;\n// type: { readonly env: \"production\"; readonly port: 3000 }\n```\n\nWithout it, `env` would be typed as `string`, not `\"production\"`.\n\n## `satisfies`\n\nValidates that a value matches a type *without widening the inferred type*.\n\n```typescript\ntype Config = { env: string; port: number };\n\nconst config = {\n  env: \"production\",\n  port: 3000,\n} satisfies Config;\n// type: { env: string; port: number }  \u2190 widened to Config\n```\n\nWait \u2014 that widens. The real power is when you want validation *and* to keep the narrow type:\n\n```typescript\nconst config = {\n  env: \"production\",\n  port: 3000,\n} satisfies Config;\n\nconfig.env; // string (satisfies widens to Config shape)\n```\n\nvs. catching errors that `as const` wouldn't:\n\n```typescript\nconst config = {\n  env: \"production\",\n  typo: 9999, // Error: Object literal may only specify known properties\n} satisfies Config;\n```\n\n## The key distinction\n\n| | `as const` | `satisfies` |\n|---|---|---|\n| Narrows to literals | yes | no |\n| Makes readonly | yes | no |\n| Validates against a type | no | yes |\n| Catches extra/wrong keys | no | yes |\n\n## Use them together\n\n```typescript\nconst config = {\n  env: \"production\",\n  port: 3000,\n} satisfies Config as const;\n// Validated against Config AND narrowed to literals\n// type: { readonly env: \"production\"; readonly port: 3000 }\n```\n\nThis is the idiomatic pattern when you want both compile-time shape validation and preserved literal types \u2014 common for route maps, theme tokens, and config objects."
+    },
+    {
+      "id": "ts-satisfies",
+      "arm": "terse",
+      "output_tokens": 706,
+      "cost_usd": 0.03869375,
+      "text": "## `as const` vs `satisfies` in TypeScript\n\nThese solve different problems and can even be combined.\n\n---\n\n### `as const` \u2014 Narrow the type, freeze the value\n\nConverts mutable, widened types into readonly literal types.\n\n```ts\nconst config = {\n  env: \"production\",\n  port: 3000,\n} as const;\n// Type: { readonly env: \"production\"; readonly port: 3000 }\n//       \u2191 string widened to literal, number widened to literal\n```\n\n**Key effects:**\n- Strings become string literals (`\"production\"`, not `string`)\n- Numbers become numeric literals (`3000`, not `number`)\n- Arrays become `readonly` tuples\n- All properties become `readonly`\n\n---\n\n### `satisfies` \u2014 Validate the type, keep the narrow type\n\nChecks that a value conforms to a type *without widening* it to that type.\n\n```ts\ntype Config = { env: string; port: number };\n\nconst config = {\n  env: \"production\",\n  port: 3000,\n} satisfies Config;\n// Type is still: { env: string; port: number }\n// \u2705 Validated against Config, but NOT widened\n```\n\nThe key benefit \u2014 you get type checking **and** keep the inferred type:\n\n```ts\nconst routes = {\n  home: \"/\",\n  about: \"/about\",\n} satisfies Record<string, string>;\n\nroutes.home.toUpperCase(); // \u2705 Works \u2014 still typed as string literal \"/\"\n//          ^ if you used `: Record<string, string>`, this would still work\n//            but you'd lose autocomplete on routes.home specifically\n```\n\n---\n\n### Side-by-side comparison\n\n| Feature | `as const` | `satisfies` |\n|---|---|---|\n| Validates against a type | \u274c | \u2705 |\n| Keeps literal/narrow types | \u2705 | \u2705 (inferred) |\n| Makes properties `readonly` | \u2705 | \u274c |\n| Catches extra/wrong keys | \u274c | \u2705 |\n\n---\n\n### Common pattern: use both together\n\n```ts\nconst palette = {\n  red: [255, 0, 0],\n  green: \"#00ff00\",\n} satisfies Record<string, string | number[]> as const;\n//  \u2191 validates shape                           \u2191 freezes to literals/tuples\n```\n\n**Rule of thumb:**\n- Use `as const` when you want literal types and immutability (e.g., enums, config tuples).\n- Use `satisfies` when you want type-checking without losing the inferred specificity.\n- Use **both** when you need validation *and* frozen literal types."
+    },
+    {
+      "id": "ts-satisfies",
+      "arm": "iceberg",
+      "output_tokens": 192,
+      "cost_usd": 0.031032499999999998,
+      "text": "`as const` locks literal types and makes values readonly; `satisfies` checks a value matches a type without widening it.\n\n| | `as const` | `satisfies` |\n|---|---|---|\n| Infers literals | \u2705 `\"red\"` not `string` | \u2705 (keeps inferred type) |\n| Type-checks shape | \u274c | \u2705 |\n| Widens type | \u274c | \u274c |\n| Allows dot-access on narrow type | \u2705 | \u2705 |\n\nMore: combine them (`\u2026 satisfies T as const`) for full literal inference + shape safety?"
+    },
+    {
+      "id": "docker-layer",
+      "arm": "baseline",
+      "output_tokens": 319,
+      "cost_usd": 0.034735049999999996,
+      "text": "The fix is to copy your dependency manifest files first, install, then copy the rest of your source code. Docker caches each layer \u2014 if the manifest files haven't changed, it reuses the cached install layer.\n\n**The pattern (Node.js example):**\n\n```dockerfile\n# Bad \u2014 source copy invalidates cache before install\nCOPY . .\nRUN npm ci\n\n# Good \u2014 install layer is cached until package-lock.json changes\nCOPY package.json package-lock.json ./\nRUN npm ci\nCOPY . .\n```\n\n**Same pattern for other ecosystems:**\n\n```dockerfile\n# Python\nCOPY requirements.txt .\nRUN pip install -r requirements.txt\nCOPY . .\n\n# Go\nCOPY go.mod go.sum ./\nRUN go mod download\nCOPY . .\n\n# Rust\nCOPY Cargo.toml Cargo.lock ./\nRUN cargo fetch\nCOPY . .\n```\n\n**The rule:** put things that change rarely near the top, things that change often near the bottom. Each changed layer invalidates all layers below it.\n\nIf you want to share your Dockerfile I can pinpoint exactly where the cache is being busted."
+    },
+    {
+      "id": "docker-layer",
+      "arm": "terse",
+      "output_tokens": 536,
+      "cost_usd": 0.036152750000000004,
+      "text": "## Fix Docker Layer Caching for Dependencies\n\nThe key principle: **copy dependency manifests first, install, then copy source code.** Docker caches each layer \u2014 if a layer's inputs haven't changed, it reuses the cache.\n\n### The Problem\n```dockerfile\n# \u274c Slow \u2014 copies all source first, so any code change busts the cache\nCOPY . .\nRUN npm install\n```\n\n### The Fix \u2014 Copy manifests before source\n\n**Node.js**\n```dockerfile\nCOPY package.json package-lock.json ./\nRUN npm ci                          # cached unless package*.json changes\nCOPY . .                            # source changes don't bust dep cache\n```\n\n**Python**\n```dockerfile\nCOPY requirements.txt ./\nRUN pip install -r requirements.txt\nCOPY . .\n```\n\n**Go**\n```dockerfile\nCOPY go.mod go.sum ./\nRUN go mod download\nCOPY . .\n```\n\n**Java (Maven)**\n```dockerfile\nCOPY pom.xml ./\nRUN mvn dependency:go-offline\nCOPY src ./src\nRUN mvn package\n```\n\n---\n\n### Additional tips\n\n| Tip | Why |\n|-----|-----|\n| Use `npm ci` instead of `npm install` | Deterministic, faster, respects lockfile |\n| Order layers least\u2192most frequently changed | Maximizes cache hits |\n| Use `.dockerignore` | Prevents `node_modules/`, `.git`, etc. from busting the `COPY . .` layer |\n| Use `--mount=type=cache` (BuildKit) | Persistent cache across builds, even for the install step |\n\n**BuildKit cache mount (most powerful option):**\n```dockerfile\n# syntax=docker/dockerfile:1\nRUN --mount=type=cache,target=/root/.npm \\\n    npm ci\n```\nThis keeps the npm/pip/etc. cache on the host between builds \u2014 even a clean rebuild is fast.\n\nEnable BuildKit with `DOCKER_BUILDKIT=1 docker build .` or set it in your Docker daemon config."
+    },
+    {
+      "id": "docker-layer",
+      "arm": "iceberg",
+      "output_tokens": 101,
+      "cost_usd": 0.0296915,
+      "text": "Copy your dependency manifest files **before** copying the rest of the source, so Docker caches the install layer.\n\n```dockerfile\nCOPY package.json package-lock.json ./\nRUN npm ci\nCOPY . .\n```\n\nMore: language-specific examples (Python, Go, etc.)?"
+    },
+    {
+      "id": "pg-index",
+      "arm": "baseline",
+      "output_tokens": 275,
+      "cost_usd": 0.034166550000000004,
+      "text": "Add a composite index on `(user_id, created_at)`:\n\n```sql\nCREATE INDEX CONCURRENTLY idx_your_table_user_id_created_at \nON your_table (user_id, created_at DESC);\n```\n\n**Why composite, not two separate indexes:** Postgres can use a single composite index to satisfy both the `WHERE user_id = ?` filter and the `ORDER BY created_at` sort in one pass, avoiding a separate sort step. Two separate indexes can't do this.\n\n**Column order matters:** `user_id` first because it's the equality filter \u2014 this lets Postgres jump directly to the matching partition of the index. `created_at` second handles the sort within that partition.\n\n**DESC vs ASC:** Match the direction to your query's `ORDER BY`. If you order `DESC`, index `DESC`; it avoids a reverse scan.\n\n**CONCURRENTLY:** Builds the index without locking writes on a live table. Takes longer but safe for production.\n\nAfter adding, run `EXPLAIN (ANALYZE, BUFFERS)` on your query and confirm you see `Index Scan` (not `Seq Scan`) and no `Sort` node in the plan."
+    },
+    {
+      "id": "pg-index",
+      "arm": "terse",
+      "output_tokens": 397,
+      "cost_usd": 0.03413925,
+      "text": "Add a **composite index** on `(user_id, created_at)`:\n\n```sql\nCREATE INDEX CONCURRENTLY idx_table_user_id_created_at \nON your_table (user_id, created_at DESC);\n```\n\n## Why this works\n\n- **`user_id` first** \u2014 satisfies the `WHERE user_id = ?` filter, drastically reducing the row scan\n- **`created_at` second** \u2014 since rows are already filtered by `user_id`, Postgres can return them pre-sorted, **eliminating the sort step entirely**\n- **`DESC`** \u2014 match your `ORDER BY` direction (use `ASC` if you order ascending) so the index scan direction aligns\n\n## Why not two separate indexes?\n\nA single-column index on `user_id` alone would still require a sort after filtering. A single-column index on `created_at` alone is nearly useless here. The composite index handles both in one pass.\n\n## Use `CONCURRENTLY`\n\nOn a live 2M-row table, `CONCURRENTLY` builds the index without locking writes. It takes longer but won't block production traffic.\n\n## Verify it's being used\n\n```sql\nEXPLAIN (ANALYZE, BUFFERS) \nSELECT ... FROM your_table \nWHERE user_id = 123 \nORDER BY created_at DESC;\n```\n\nLook for **`Index Scan`** (not `Seq Scan`) in the output. You should see your 4s query drop to **< 10ms** for typical user result sets."
+    },
+    {
+      "id": "pg-index",
+      "arm": "iceberg",
+      "output_tokens": 89,
+      "cost_usd": 0.029573,
+      "text": "Add a composite index on `(user_id, created_at)`.\n\n```sql\nCREATE INDEX CONCURRENTLY idx_table_user_created\nON your_table (user_id, created_at DESC);\n```\n\nMore: want advice on partial indexes or EXPLAIN ANALYZE output?"
+    },
+    {
+      "id": "async-race",
+      "arm": "baseline",
+      "output_tokens": 452,
+      "cost_usd": 0.03672955,
+      "text": "This is a **lost update** (or \"read-modify-write\") race condition. Here's the sequence:\n\n```\nTime \u2192\n\nFunction A:  read(x=1) \u2500\u2500\u2500\u2500 compute(x+1) \u2500\u2500\u2500\u2500 write(x=2)\nFunction B:       read(x=1) \u2500\u2500 compute(x+10) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 write(x=11)  \u2190 A's write is gone\n```\n\nBoth functions read the same stale value, compute independently, then the last writer wins and overwrites the first write entirely.\n\n**Common fixes, depending on your stack:**\n\n1. **Atomic operations** \u2014 if you only need to increment/append, use database-level atomics:\n   ```sql\n   UPDATE records SET count = count + 1 WHERE id = ?\n   ```\n\n2. **Optimistic locking** \u2014 add a `version` field; the write fails if the version changed since you read:\n   ```js\n   UPDATE records SET val = ?, version = version+1\n   WHERE id = ? AND version = <version-you-read>\n   ```\n   Retry on failure.\n\n3. **Pessimistic locking** \u2014 acquire a lock before reading so only one writer proceeds at a time (`SELECT FOR UPDATE` in SQL, a mutex in-process).\n\n4. **Serialization** \u2014 if both functions run in the same process, funnel writes through a queue or use a mutex so they can't interleave.\n\nThe right fix depends on your database/runtime. If you share the code I can give a specific recommendation."
+    },
+    {
+      "id": "async-race",
+      "arm": "terse",
+      "output_tokens": 583,
+      "cost_usd": 0.03686225,
+      "text": "## Race Condition / Lost Update\n\nYou're experiencing a **read-modify-write race condition**. Here's what happens:\n\n```\nTime \u2192\n\nFunction A:  [READ: x=1] -----> [compute A] -----> [WRITE: x=2]\nFunction B:  [READ: x=1] -----> [compute B] ---------------------> [WRITE: x=3]\n\nResult: x=3  \u2705 (A's write is lost)\n```\n\nBoth functions **read the same stale value**, compute independently, then **the last writer wins** \u2014 overwriting the other's change.\n\n---\n\n## Common Fixes\n\n### 1. **Atomic operations** (simplest, when possible)\nUse increment/append operations that don't require a read first:\n```js\n// \u274c Race condition\nconst val = await db.get(id);\nawait db.set(id, val + 1);\n\n// \u2705 Atomic\nawait db.increment(id, 1);\n```\n\n### 2. **Optimistic locking** (read with version, fail on conflict)\n```js\nconst { value, version } = await db.get(id);\nconst newValue = compute(value);\nawait db.updateIfVersion(id, newValue, version); // throws if version changed\n```\nRetry on conflict.\n\n### 3. **Pessimistic locking** (serialize access)\n```js\nawait lock.acquire(recordId);\ntry {\n  const val = await db.get(id);\n  await db.set(id, compute(val));\n} finally {\n  lock.release(recordId);\n}\n```\n\n### 4. **Queue / serialize writes**\nFunnel all writes through a single async queue so they execute one at a time.\n\n---\n\n## Which to use?\n\n| Situation | Best approach |\n|---|---|\n| Simple counters/lists | Atomic operations |\n| Low contention, can retry | Optimistic locking |\n| High contention, can't retry | Pessimistic locking |\n| Complex business logic | Queue/serialization |\n\nThe root cause is always the same: **async doesn't mean sequential** \u2014 two concurrent operations interleave, and neither knows about the other's in-flight change."
+    },
+    {
+      "id": "async-race",
+      "arm": "iceberg",
+      "output_tokens": 83,
+      "cost_usd": 0.029426,
+      "text": "A race condition: both functions read the old value, then both write, and the last write overwrites the first.\n\nMore: fix strategies (optimistic locking, queuing, atomic ops)?"
+    },
+    {
+      "id": "cors-error",
+      "arm": "baseline",
+      "output_tokens": 539,
+      "cost_usd": 0.0380973,
+      "text": "A few common reasons this happens even when the header is set:\n\n**1. Preflight request fails, not the actual request**\nFor non-simple requests (custom headers, `Content-Type: application/json`, `PUT`/`DELETE`, etc.), the browser sends an `OPTIONS` preflight first. If your server doesn't handle `OPTIONS` and return the CORS headers on *that* response, the browser blocks everything. Check your server logs \u2014 look for a `405 Method Not Allowed` or missing headers on the `OPTIONS` call.\n\n**2. The header is only set on success paths**\nIf your server throws an error (500, 401, 404), middleware may not add the CORS header to the error response. The browser sees a response with no `Access-Control-Allow-Origin` and blocks it.\n\n**3. Credentials + wildcard**\nIf you're sending cookies or `Authorization` headers (`credentials: 'include'`), the browser rejects `Access-Control-Allow-Origin: *`. You must echo back the specific origin and also set `Access-Control-Allow-Credentials: true`.\n\n**4. Multiple values in the header**\n`Access-Control-Allow-Origin` can only have one value. If your code appends it twice (e.g., middleware + manual set), some browsers reject it.\n\n**5. Proxy or CDN strips the header**\nThe header exists on the origin server response but a reverse proxy (nginx, Cloudflare, API gateway) strips or overwrites it before it reaches the browser.\n\n**How to debug:**\n```bash\n# Check what headers actually arrive at the browser\ncurl -i -X OPTIONS https://your-api.com/endpoint \\\n  -H \"Origin: https://your-frontend.com\" \\\n  -H \"Access-Control-Request-Method: POST\" \\\n  -H \"Access-Control-Request-Headers: Content-Type\"\n```\n\nLook at the raw response headers \u2014 the browser's network tab can lie if devtools is open after the fact. The `OPTIONS` preflight response is the most common culprit."
+    },
+    {
+      "id": "cors-error",
+      "arm": "terse",
+      "output_tokens": 710,
+      "cost_usd": 0.03881,
+      "text": "## Common Reasons CORS Fails Even When the Header Is Set\n\n### 1. **Preflight (OPTIONS) request isn't handled**\nBrowsers send a preflight `OPTIONS` request *before* the actual request for non-simple requests (e.g., POST with JSON, custom headers). If your server doesn't respond to `OPTIONS` with the right headers, the browser blocks it \u2014 even if your actual endpoint sets the header correctly.\n\n**Fix:** Handle `OPTIONS` requests explicitly:\n```js\n// Express example\napp.options('*', cors()); // or manually return 204\n```\n\n### 2. **The header is set on the wrong response**\nYour middleware might run *after* an error or redirect, so the header never makes it onto the response the browser sees.\n\n**Fix:** Ensure CORS middleware is registered **first**, before routes/error handlers.\n\n### 3. **Credentials + wildcard mismatch**\nIf the request uses `credentials: 'include'` (cookies/auth), the server **cannot** use `Access-Control-Allow-Origin: *`. It must be a specific origin, *and* you must also set `Access-Control-Allow-Credentials: true`.\n\n**Fix:**\n```\nAccess-Control-Allow-Origin: https://your-frontend.com\nAccess-Control-Allow-Credentials: true\n```\n\n### 4. **The header is duplicated**\nIf two middlewares both set the header, some browsers reject the response entirely (the spec requires exactly one value).\n\n**Fix:** Check your response headers in DevTools \u2192 Network tab and look for duplicates.\n\n### 5. **HTTPS \u2192 HTTP mismatch (mixed content)**\nA request from an `https://` page to an `http://` server is blocked as mixed content, which can look like a CORS error.\n\n### 6. **Reverse proxy strips the header**\nNginx, Cloudflare, or a load balancer may be stripping or overwriting the header before it reaches the browser.\n\n**Fix:** Check headers in DevTools \u2192 Network \u2192 Response Headers to see what the browser *actually* received.\n\n---\n\n## Quick Diagnostic Checklist\n\n| Check | How |\n|---|---|\n| Is the header present on the **actual response**? | DevTools \u2192 Network \u2192 Response Headers |\n| Is there an `OPTIONS` preflight? Did it succeed (200/204)? | Filter by `OPTIONS` in Network tab |\n| Is `credentials: 'include'` used? | Check for wildcard `*` \u2014 must use specific origin |\n| Duplicate headers? | Look for two `Access-Control-Allow-Origin` lines |\n| Is a proxy involved? | Compare server logs vs. browser-received headers |\n\nThe Network tab in DevTools is your best friend here \u2014 it'll show you exactly what headers the browser received (or if the preflight failed)."
+    },
+    {
+      "id": "cors-error",
+      "arm": "iceberg",
+      "output_tokens": 100,
+      "cost_usd": 0.029723749999999997,
+      "text": "The server sets the header on the response, but the browser blocks it before that \u2014 usually because a **preflight OPTIONS request fails first**.\n\nMore: want the top 3 specific causes (credentials, wildcard mismatch, missing OPTIONS handler)?"
+    },
+    {
+      "id": "node-memory",
+      "arm": "baseline",
+      "output_tokens": 563,
+      "cost_usd": 0.0383618,
+      "text": "Start with these in order:\n\n**1. Confirm it's actually a leak (not just growth)**\n```bash\nnode --max-old-space-size=512 your-app.js\n```\nIf it crashes faster, it's a leak. If it stabilizes, you may just need more heap.\n\n**2. Take heap snapshots to find the culprit**\n```bash\nnode --inspect your-app.js\n```\nOpen `chrome://inspect`, take a snapshot, do some work, take another, then use the **Comparison** view to see what objects are accumulating. Sort by `# Delta`.\n\n**3. Common culprits to check first**\n- **Event listeners never removed** \u2014 `emitter.on(...)` inside a loop or request handler without a corresponding `removeListener`\n- **Closures holding references** \u2014 callbacks or promises that capture large objects and never release them\n- **Growing caches/Maps/Sets** \u2014 any in-memory store with no eviction policy\n- **`setInterval` / timers** \u2014 especially ones that reference outer scope data\n- **Streams not consumed or destroyed** \u2014 unpipe'd or un-`destroy()`'d streams hold buffers\n\n**4. Quick diagnostic with `--expose-gc` + `process.memoryUsage()`**\n```js\nsetInterval(() => {\n  global.gc?.();\n  const { heapUsed, heapTotal } = process.memoryUsage();\n  console.log(`heap: ${Math.round(heapUsed / 1e6)}MB / ${Math.round(heapTotal / 1e6)}MB`);\n}, 5000);\n```\nRun with `node --expose-gc`. If heap climbs steadily between GC cycles, it's a leak.\n\n**5. If you need more detail**, `node --heap-prof` produces a `.heapprofile` you can load in Chrome DevTools, or use the [`clinic`](https://clinicjs.org/) suite (`clinic heap`) for a higher-level view.\n\nThe heap snapshot comparison in Chrome DevTools is usually the fastest path to the specific object type that's accumulating \u2014 start there."
+    },
+    {
+      "id": "node-memory",
+      "arm": "terse",
+      "output_tokens": 690,
+      "cost_usd": 0.038414500000000004,
+      "text": "## Node.js Memory Leak Debugging \u2014 Where to Start\n\n### 1. Confirm it's actually a leak (not just growth)\n```bash\nnode --max-old-space-size=512 your-app.js  # Set a ceiling to fail fast\n```\nWatch RSS vs. heap \u2014 if heap grows unboundedly, it's a leak.\n\n---\n\n### 2. Get a heap snapshot\n```js\nconst v8 = require('v8');\nconst fs = require('fs');\n\n// Trigger on SIGUSR2 or an endpoint\nprocess.on('SIGUSR2', () => {\n  const snapshot = v8.writeHeapSnapshot();\n  console.log('Heap snapshot written to', snapshot);\n});\n```\n```bash\nkill -USR2 <pid>\n```\nOpen the `.heapsnapshot` in **Chrome DevTools \u2192 Memory tab**.\n\n---\n\n### 3. Common culprits \u2014 check these first\n\n| Suspect | What to look for |\n|---|---|\n| **Event listeners** | `emitter.listenerCount()` growing; missing `removeListener` |\n| **Closures holding references** | Long-lived callbacks capturing large objects |\n| **Caches / Maps / Sets** | Unbounded growth, no eviction (use `WeakMap` where possible) |\n| **Timers** | `setInterval` callbacks that capture scope; never cleared |\n| **Streams** | Not consuming or destroying; `pipe` without error handling |\n| **Global state** | Arrays/maps being pushed to but never cleared |\n| **Promises** | Unresolved promise chains keeping references alive |\n\n---\n\n### 4. Use `--inspect` + Chrome DevTools for live profiling\n```bash\nnode --inspect your-app.js\n```\nOpen `chrome://inspect` \u2192 **Memory** \u2192 take 3 snapshots over time \u2192 use **\"Comparison\"** view to see what's accumulating between snapshots.\n\n---\n\n### 5. Automate with `clinic.js` (fastest signal)\n```bash\nnpx clinic heaprofiler -- node your-app.js\n# then hit it with load (autocannon, wrk, etc.)\nnpx clinic doctor -- node your-app.js\n```\nGenerates a flame graph pointing directly at the retaining path.\n\n---\n\n### 6. Check for the classic listener leak\n```bash\nnode --trace-warnings your-app.js\n# Look for: \"MaxListenersExceededWarning\"\n```\n\n---\n\n**Recommended order:**\n1. `clinic doctor` for a quick high-level signal\n2. Heap snapshot comparison in Chrome DevTools to identify the retaining type\n3. Trace back *who holds a reference* to that type using the **Retainers** panel"
+    },
+    {
+      "id": "node-memory",
+      "arm": "iceberg",
+      "output_tokens": 78,
+      "cost_usd": 0.02930825,
+      "text": "Start with `node --inspect` + Chrome DevTools heap snapshots \u2014 take two, diff them, find objects that keep growing.\n\nMore: common leak sources (event listeners, closures, caches)?"
+    },
+    {
+      "id": "css-center",
+      "arm": "baseline",
+      "output_tokens": 127,
+      "cost_usd": 0.03184555,
+      "text": "Flexbox is the cleanest approach:\n\n```css\n.parent {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n```\n\nOr with CSS Grid, which is equally clean:\n\n```css\n.parent {\n  display: grid;\n  place-items: center;\n}\n```\n\n`place-items: center` is the most concise \u2014 one line vs two. Both have full browser support and no downsides. Use Grid if you're already in a grid layout, Flexbox otherwise."
+    },
+    {
+      "id": "css-center",
+      "arm": "terse",
+      "output_tokens": 329,
+      "cost_usd": 0.03303325,
+      "text": "## Centering a Div in 2026\n\nThe cleanest way is **CSS Grid** \u2014 one declaration on the parent:\n\n```css\n.parent {\n  display: grid;\n  place-items: center;\n}\n```\n\nThat's it. `place-items` is shorthand for `align-items` + `justify-items`.\n\n---\n\n### Alternatives\n\n**Flexbox** (also excellent, slightly more verbose):\n```css\n.parent {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n```\n\n**Absolute positioning** (useful when the parent has a fixed size or you need to center over other content):\n```css\n.child {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  transform: translate(-50%, -50%);\n}\n```\n\n---\n\n### Quick Recommendation\n\n| Use case | Best choice |\n|---|---|\n| General layout | `grid` + `place-items: center` |\n| Row of centered items | `flexbox` |\n| Overlay / modal | `absolute` + `transform` |\n\n**Grid with `place-items`** wins for simplicity \u2014 browser support is universal and it's the most concise."
+    },
+    {
+      "id": "css-center",
+      "arm": "iceberg",
+      "output_tokens": 42,
+      "cost_usd": 0.028791999999999998,
+      "text": "Flexbox on the parent: `display:flex; align-items:center; justify-content:center;`\n\nMore: CSS Grid alternative (`place-items:center`)?"
+    },
+    {
+      "id": "jwt-storage",
+      "arm": "baseline",
+      "output_tokens": 189,
+      "cost_usd": 0.0327323,
+      "text": "**httpOnly cookie.** Here's why:\n\n- **localStorage** is readable by any JavaScript on the page \u2014 a single XSS vulnerability exposes the token directly.\n- **httpOnly cookie** is inaccessible to JavaScript entirely; only the browser sends it automatically on requests. XSS can't steal it.\n\nThe main tradeoff: cookies require CSRF protection (use `SameSite=Strict` or `SameSite=Lax`, plus a CSRF token for state-changing requests), while localStorage has no CSRF risk but is wide open to XSS.\n\nIn practice, XSS is far more common and harder to fully prevent than CSRF, so the httpOnly cookie wins on risk profile. Set it with `Secure; HttpOnly; SameSite=Lax` and you're in good shape."
+    },
+    {
+      "id": "jwt-storage",
+      "arm": "terse",
+      "output_tokens": 416,
+      "cost_usd": 0.034295,
+      "text": "## httpOnly Cookie \u2014 strongly recommended\n\nHere's the comparison:\n\n### localStorage \u274c\n- **XSS vulnerable** \u2014 any injected script can read `localStorage` and steal the token\n- Simple to implement, but the risk isn't worth it for auth tokens\n\n### httpOnly Cookie \u2705\n- **XSS-proof** \u2014 the `httpOnly` flag makes it inaccessible to JavaScript entirely\n- Automatically sent with requests (no manual `Authorization` header needed)\n- Pair it with:\n  - `Secure` \u2014 HTTPS only\n  - `SameSite=Strict` (or `Lax`) \u2014 mitigates CSRF attacks\n  - Short expiry + refresh token rotation\n\n```http\nSet-Cookie: token=<jwt>; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=900\n```\n\n### The one caveat: CSRF\nhttpOnly cookies are susceptible to CSRF, but it's easily mitigated:\n- Use `SameSite=Strict/Lax` (handles most cases automatically)\n- Add a CSRF token for state-changing requests if needed\n\n### When localStorage might seem tempting\n- **Cross-origin/subdomain APIs** where you need to explicitly attach the token \u2014 but you can still use cookies with `SameSite=None; Secure` + CORS configured properly\n- **Mobile apps / non-browser clients** \u2014 here localStorage equivalents are fine since there's no browser XSS attack surface\n\n**Bottom line:** XSS is far more common and harder to fully prevent than CSRF. httpOnly cookies protect against the bigger threat."
+    },
+    {
+      "id": "jwt-storage",
+      "arm": "iceberg",
+      "output_tokens": 36,
+      "cost_usd": 0.02865875,
+      "text": "httpOnly cookie \u2014 it blocks JavaScript access, defeating XSS token theft.\n\nMore: trade-offs vs. localStorage, or CSRF protection for cookies?"
+    },
+    {
+      "id": "python-gil",
+      "arm": "baseline",
+      "output_tokens": 342,
+      "cost_usd": 0.035027800000000005,
+      "text": "No. Python's Global Interpreter Lock (GIL) means only one thread executes Python bytecode at a time, so threading won't parallelize CPU-bound work \u2014 you'll get the same throughput with more overhead.\n\n**Use `multiprocessing` instead.** Each process gets its own Python interpreter and GIL, so cores are used in parallel:\n\n```python\nfrom multiprocessing import Pool\n\ndef cpu_heavy(x):\n    return x ** 2  # your actual work here\n\nwith Pool() as p:\n    results = p.map(cpu_heavy, range(1000))\n```\n\n**Quick guide:**\n\n| Workload | Right tool | Why |\n|---|---|---|\n| CPU-bound | `multiprocessing` | Bypasses GIL via separate processes |\n| I/O-bound (network, disk) | `threading` or `asyncio` | Threads release GIL during I/O waits |\n| CPU-bound, NumPy/pandas heavy | threading *can* work | NumPy releases the GIL in C extensions |\n\nIf spawning processes is too heavy, `concurrent.futures.ProcessPoolExecutor` is a cleaner API over the same mechanism. For compute-intensive numerical work, also consider libraries like NumPy, Numba, or Cython that release the GIL in native code."
+    },
+    {
+      "id": "python-gil",
+      "arm": "terse",
+      "output_tokens": 497,
+      "cost_usd": 0.0355105,
+      "text": "**No** \u2014 threading will **not** speed up a CPU-bound Python script, and may even slow it down slightly.\n\n## Why: The GIL\n\nPython's **Global Interpreter Lock (GIL)** prevents multiple threads from executing Python bytecode simultaneously. Even with multiple threads, only one runs at a time for CPU work. You get concurrency (interleaving), not parallelism (simultaneous execution).\n\n## What to use instead\n\n| Use case | Best tool |\n|---|---|\n| **CPU-bound** (number crunching, parsing, etc.) | `multiprocessing` or `concurrent.futures.ProcessPoolExecutor` |\n| **I/O-bound** (network, disk, DB calls) | `threading` or `asyncio` \u2705 |\n| **Numeric/array work** | `numpy`, `numba`, `Cython` (release the GIL) |\n\n## Quick example \u2014 CPU-bound fix\n\n```python\nfrom concurrent.futures import ProcessPoolExecutor\n\ndef heavy_work(n):\n    return sum(i * i for i in range(n))\n\n# Runs in parallel across CPU cores\nwith ProcessPoolExecutor() as executor:\n    results = list(executor.map(heavy_work, [10**7] * 8))\n```\n\n## Key caveats\n\n- **`multiprocessing`** spawns separate processes (no GIL), but has overhead for inter-process communication and memory copying.\n- Some C-extension libraries (NumPy, OpenCV) **release the GIL** during heavy operations \u2014 threading *can* help in those cases.\n- Python 3.13+ introduces an **experimental free-threaded mode** (`--disable-gil`) that removes the GIL, but it's not production-ready yet.\n\n**Bottom line:** For CPU-bound work, use `ProcessPoolExecutor` \u2014 it's the drop-in parallel replacement for `ThreadPoolExecutor`."
+    },
+    {
+      "id": "python-gil",
+      "arm": "iceberg",
+      "output_tokens": 58,
+      "cost_usd": 0.02899925,
+      "text": "No \u2014 Python's GIL blocks true parallel thread execution for CPU-bound work.\n\nMore: multiprocessing or alternatives?"
+    },
+    {
+      "id": "rebase-vs-merge",
+      "arm": "baseline",
+      "output_tokens": 231,
+      "cost_usd": 0.03337255,
+      "text": "**Rebase** for most teams. It keeps a linear history that's easy to `git log` and bisect, and PRs read as a clean narrative of changes.\n\nUse **merge** if you need to preserve the exact topology of how branches evolved \u2014 useful in open-source projects where contributor history matters, or when you want a clear \"merge commit\" as a milestone marker.\n\nThe main tradeoff: rebase rewrites commit SHAs, so everyone working on the same branch must coordinate (`git pull --rebase`) or you'll get painful divergence. If your team struggles with this, merge is safer.\n\n**Practical recommendation:** rebase locally before opening a PR, merge to main (with a merge commit or squash). This gives you clean per-PR history on main without the coordination overhead of rebasing shared branches."
+    },
+    {
+      "id": "rebase-vs-merge",
+      "arm": "terse",
+      "output_tokens": 518,
+      "cost_usd": 0.03583525,
+      "text": "## Rebase vs. Merge for Feature Branches\n\nBoth are valid \u2014 the right choice depends on your team's priorities:\n\n---\n\n### Use **Merge** if you want:\n- **Preserved history** \u2014 shows exactly when branches diverged and joined\n- **Simpler workflow** \u2014 no risk of rewriting shared history\n- **Easier conflict resolution** \u2014 conflicts happen once, at merge time\n- **Auditability** \u2014 you can always see what was on a branch at any point\n\n```\nmain:    A---B---C-------M\n                  \\     /\nfeature:           D---E\n```\n\n### Use **Rebase** if you want:\n- **Linear history** \u2014 cleaner `git log`, easier to bisect\n- **Cleaner PRs** \u2014 commits appear on top of the latest main\n- **No merge commits** cluttering the log\n\n```\nmain:    A---B---C---D'--E'\n                     (rebased feature)\n```\n\n---\n\n### Key Rules if You Rebase\n\n> **Never rebase shared/public branches.** Only rebase your *local* feature branch before opening a PR or merging.\n\n---\n\n### Common Team Strategies\n\n| Strategy | How it works |\n|---|---|\n| **Merge always** | Simple, safe, noisy history |\n| **Rebase + merge** | Rebase locally, then merge (possibly squash) |\n| **Squash merge** | All feature commits \u2192 1 commit on main |\n| **Rebase + fast-forward** | Linear history, no merge commits at all |\n\n---\n\n### My Recommendation\n\n**For most teams: rebase locally, squash-merge into main.**\n\n- Developers rebase their feature branch on `main` before the PR \u2192 conflicts resolved early\n- PR is merged with **squash merge** \u2192 one clean commit per feature on `main`\n- History stays linear and readable without the discipline burden of a full rebase workflow\n\nThis gives you the best of both worlds: clean main history + simple conflict management."
+    },
+    {
+      "id": "rebase-vs-merge",
+      "arm": "iceberg",
+      "output_tokens": 60,
+      "cost_usd": 0.029029,
+      "text": "Use merge for shared branches, rebase for solo feature branches.\n\nMore: trade-offs for each, or team workflow setup?"
+    },
+    {
+      "id": "n-plus-one",
+      "arm": "baseline",
+      "output_tokens": 544,
+      "cost_usd": 0.038129550000000005,
+      "text": "This is the **N+1 query problem**.\n\n## What it is\n\nYou fetch a list of N items (1 query), then run a separate query for each item to get related data (N queries). 200 requests = 1 + 199, or some variation of that pattern.\n\n```python\n# N+1: 1 query for orders, then 1 per order for the user\norders = db.query(\"SELECT * FROM orders\")          # 1 query\nfor order in orders:\n    user = db.query(\"SELECT * FROM users WHERE id = ?\", order.user_id)  # N queries\n```\n\n## How to fix it\n\n**1. Eager loading / JOIN** \u2014 fetch everything in one query:\n```python\norders = db.query(\"\"\"\n    SELECT orders.*, users.name FROM orders\n    JOIN users ON users.id = orders.user_id\n\"\"\")\n```\n\n**2. Batch loading** \u2014 fetch all related records in one `IN` query:\n```python\norders = db.query(\"SELECT * FROM orders\")\nuser_ids = [o.user_id for o in orders]\nusers = db.query(\"SELECT * FROM users WHERE id = ANY(?)\", user_ids)\nusers_by_id = {u.id: u for u in users}\n# now join in memory\n```\n\n**3. ORM-level fix** \u2014 most ORMs have a way to declare this upfront:\n- SQLAlchemy: `.options(joinedload(Order.user))`\n- Django: `.select_related('user')` or `.prefetch_related('items')`\n- ActiveRecord: `.includes(:user)`\n- Prisma: `include: { user: true }`\n\n## How to find it\n\nThe fastest way is to log all queries with their call site. If you see the same query repeated with different IDs, that's your N+1. Tools like Django Debug Toolbar, SQLAlchemy's `echo=True`, or a query counter middleware make it obvious.\n\nThe fix is almost always to move from \"query inside a loop\" to \"one query with `IN (...)` or a `JOIN`, then join in memory.\""
+    },
+    {
+      "id": "n-plus-one",
+      "arm": "terse",
+      "output_tokens": 635,
+      "cost_usd": 0.037652250000000005,
+      "text": "## The N+1 Query Problem\n\nThis is the **N+1 query problem** \u2014 you fetch 1 list, then make N individual queries for each item in it.\n\n**Example (bad):**\n```python\n# 1 query to get 200 users\nusers = db.query(\"SELECT * FROM users\")\n\n# Then 200 MORE queries \u2014 one per user\nfor user in users:\n    user.posts = db.query(\"SELECT * FROM posts WHERE user_id = ?\", user.id)\n```\n**Total: 201 queries**\n\n---\n\n## Fixes\n\n### 1. Eager Loading / JOINs (most common fix)\n```python\n# 1 query with a JOIN\nusers = db.query(\"\"\"\n    SELECT users.*, posts.*\n    FROM users\n    LEFT JOIN posts ON posts.user_id = users.id\n\"\"\")\n```\n\n### 2. Batch loading (IN clause)\n```python\nusers = db.query(\"SELECT * FROM users\")\nuser_ids = [u.id for u in users]\n\n# 1 query for ALL posts at once\nposts = db.query(\"SELECT * FROM posts WHERE user_id IN (?)\", user_ids)\n\n# Map them in Python\nposts_by_user = group_by(posts, key=\"user_id\")\n```\n\n### 3. ORM-level eager loading\nMost ORMs have built-in solutions:\n\n| ORM | Fix |\n|-----|-----|\n| **SQLAlchemy** | `.options(joinedload(User.posts))` |\n| **Django** | `.select_related()` / `.prefetch_related()` |\n| **ActiveRecord** | `.includes(:posts)` |\n| **Prisma** | `include: { posts: true }` |\n| **TypeORM** | `relations: [\"posts\"]` |\n\n### 4. DataLoader (GraphQL / distributed systems)\nBatches and deduplicates queries across a request using a pattern popularized by Facebook:\n```js\nconst userLoader = new DataLoader(ids => batchFetchUsers(ids));\n```\n\n---\n\n## How to detect it\n\n- **Django:** [`django-debug-toolbar`](https://django-debug-toolbar.readthedocs.io/) \u2192 SQL panel\n- **SQLAlchemy:** log with `echo=True`\n- **Any app:** query count spikes linearly with result set size \u2192 N+1\n\nThe key signal: **query count scales with row count** instead of staying constant."
+    },
+    {
+      "id": "n-plus-one",
+      "arm": "iceberg",
+      "output_tokens": 89,
+      "cost_usd": 0.029531,
+      "text": "The N+1 query problem \u2014 you fetch N records, then query once per record instead of joining.\n\nFix: replace the N loops with one JOIN or a batch `WHERE id IN (...)` query.\n\nMore: want a code example for a specific ORM or language?"
+    },
+    {
+      "id": "test-flaky",
+      "arm": "baseline",
+      "output_tokens": 444,
+      "cost_usd": 0.03662405,
+      "text": "Flaky tests that only fail in CI almost always come down to a few root causes:\n\n**Timing / async races**\n- Implicit waits that are too short for CI's slower machines\n- Missing `await` on async operations\n- Polling loops without proper backoff\n\n**State leakage between tests**\n- Shared mutable state (globals, singletons, caches) not reset between runs\n- Database/file cleanup that only partially runs (e.g., a teardown that throws before finishing)\n- Test order dependency \u2014 run your suite in random order to expose this\n\n**Environment differences**\n- CI has fewer CPU cores \u2192 parallelism bugs surface\n- Timezone/locale differences (`TZ=UTC` locally vs. CI)\n- Missing or different env vars\n- File system case sensitivity (macOS is case-insensitive, Linux is not)\n\n**Concurrency**\n- Race conditions in code that spawns goroutines/threads/workers\n- Port conflicts when multiple test workers bind the same port\n\n**How to find it:**\n\n1. **Reproduce in CI** \u2014 add a matrix step that runs the single test 20\u201350 times: `for i in {1..30}; do pytest path/to/test.py::test_name || break; done`\n2. **Add logging around the failure** \u2014 timestamps, state dumps, which worker/process ran it\n3. **Run with randomized order** \u2014 `pytest-randomly`, `jest --randomize`, etc.\n4. **Check CI logs for timing** \u2014 look at how long the failing step took vs. passing runs\n\nIf you share the test file or failure output I can help narrow it down faster."
+    },
+    {
+      "id": "test-flaky",
+      "arm": "terse",
+      "output_tokens": 480,
+      "cost_usd": 0.035326750000000004,
+      "text": "Flaky tests that only fail in CI are almost always caused by one of these:\n\n## Common Causes & How to Debug\n\n**1. Race conditions / async timing**\n- CI machines are slower \u2192 timeouts that pass locally fail under load\n- Fix: increase timeouts, use proper `await`/polling instead of fixed sleeps\n\n**2. Test order dependency**\n- Tests share global state (DB, singletons, env vars) and pass locally because order happens to work\n- Fix: run tests in random order (`--randomize`), add proper setup/teardown\n\n**3. Environment differences**\n- Timezone, locale, file path separators, env vars present locally but not in CI\n- Fix: `console.log(process.env)` or equivalent at test start; compare CI vs local\n\n**4. Resource contention**\n- CI runs tests in parallel; ports, files, or DB rows collide\n- Fix: use unique IDs/ports per test, or limit parallelism\n\n**5. Date/time sensitivity**\n- Tests that rely on \"now\" can fail at midnight, month boundaries, etc.\n- Fix: mock the clock\n\n## Practical Steps\n\n```bash\n# 1. Reproduce locally by running the test many times\nfor i in {1..50}; do npm test -- --testPathPattern=MyTest; done\n\n# 2. Run with CI's parallelism settings\nnpm test -- --maxWorkers=2\n\n# 3. Check CI logs for the exact failure \u2014 error message + stack trace\n#    often reveals timing or env issues immediately\n```\n\n**Best tool:** most test runners have a `--repeat` or `--retry` flag \u2014 set retries to 0 in CI so flakes *always* fail visibly rather than being silently swallowed.\n\nOnce you share the test code or the CI error output, I can give more targeted advice."
+    },
+    {
+      "id": "test-flaky",
+      "arm": "iceberg",
+      "output_tokens": 170,
+      "cost_usd": 0.030735500000000002,
+      "text": "You have a flaky test \u2014 likely caused by timing, shared state, or environment differences between CI and local.\n\nTop causes: async race conditions, hardcoded ports/paths, time-zone or date dependency, test-order side effects, or CI resource limits causing slow ops to time out.\n\nFix path: add `--repeat-each=20` (or equivalent) to force the failure locally, then log timestamps and shared state around the failing assertion.\n\n\u2192 Can you share the test code or the CI failure output?"
+    },
+    {
+      "id": "env-secret-leak",
+      "arm": "baseline",
+      "output_tokens": 489,
+      "cost_usd": 0.037241800000000005,
+      "text": "**Step 1: Revoke the key immediately** \u2014 this is the most important step. Go to the service's dashboard and invalidate the exposed key *right now*, before anything else. Assume it's been compromised.\n\n**Step 2: Remove it from git history**\n\nUse `git filter-repo` (preferred) or BFG Repo Cleaner to scrub the key from history.\n\nWith `git filter-repo`:\n```bash\n# Install if needed: pip install git-filter-repo\ngit filter-repo --replace-text <(echo 'YOUR_ACTUAL_KEY==>REMOVED')\n```\n\nOr to remove a specific file entirely:\n```bash\ngit filter-repo --path path/to/file/with/key --invert-paths\n```\n\n**Step 3: Force push**\n```bash\ngit push origin --force --all\ngit push origin --force --tags\n```\n\n**Step 4: Tell collaborators** \u2014 anyone who cloned the repo needs to re-clone or rebase, because their local history still has the key.\n\n**Step 5: Check for forks/caches** \u2014 GitHub caches commits for up to 90 days even after force push. Contact GitHub support to request a cache purge at [support.github.com](https://support.github.com). Also check if any CI logs printed the key.\n\n**Step 6: Audit for unauthorized use** \u2014 check the API provider's usage logs for suspicious activity between when you pushed and when you revoked.\n\nThe golden rule: **treat the key as permanently compromised the moment it was pushed**, regardless of how fast you act. Rotating it is non-negotiable."
+    },
+    {
+      "id": "env-secret-leak",
+      "arm": "terse",
+      "output_tokens": 552,
+      "cost_usd": 0.0363495,
+      "text": "**Act fast \u2014 treat the key as compromised immediately.**\n\n## Step 1: Revoke the key RIGHT NOW\nGo to the service's dashboard (AWS, OpenAI, GitHub, etc.) and **invalidate/rotate the key before anything else**. Assume it's already been scraped \u2014 bots scan public repos within seconds of a push.\n\n## Step 2: Remove it from history\n\nIf the repo is **private** and you want to clean history anyway:\n\n```bash\n# Using git-filter-repo (recommended over BFG)\npip install git-filter-repo\ngit filter-repo --string-replace 'YOUR_API_KEY_HERE==>REDACTED'\ngit push --force\n```\n\nOr use [BFG Repo Cleaner](https://rtyp.github.io/bfg-repo-cleaner/):\n```bash\nbfg --replace-text secrets.txt   # file contains the key\ngit push --force\n```\n\n> \u26a0\ufe0f **If the repo is public**, cleaning history helps but **doesn't guarantee safety** \u2014 GitHub caches commits, forks may exist, and bots already scraped it. Revoking the key is the only real fix.\n\n## Step 3: Fix the code going forward\n\nMove the key to an environment variable or secrets manager:\n```bash\n# .env (add to .gitignore!)\nAPI_KEY=your_new_key\n```\n\n```bash\necho \".env\" >> .gitignore\n```\n\n## Step 4: Notify if required\n\nIf this key had access to sensitive user data, check if you have a breach notification obligation (GDPR, SOC 2, etc.).\n\n---\n\n**Priority order:**\n1. \ud83d\udd34 Revoke key (do this now)\n2. \ud83d\udfe0 Clean git history / remove from repo\n3. \ud83d\udfe1 Issue a new key and store it safely\n4. \ud83d\udfe2 Add `.gitignore` + consider a secrets scanner like [git-secrets](https://github.com/awslabs/git-secrets) or [truffleHog](https://github.com/trufflesecurity/trufflehog)"
+    },
+    {
+      "id": "env-secret-leak",
+      "arm": "iceberg",
+      "output_tokens": 68,
+      "cost_usd": 0.029163249999999998,
+      "text": "**Revoke the key now in your provider's dashboard \u2014 pushing makes it public, rotation is the only true fix.**\n\nMore: git history scrubbing steps?"
+    }
+  ]
+}
