@@ -1,7 +1,7 @@
 {
   "name": "iceberg",
   "description": "Makes your coding agent laconic. One-line answers, no walls of text. The work stays below the surface.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "David Hanlon"
   },

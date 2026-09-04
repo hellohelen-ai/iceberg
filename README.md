@@ -191,6 +191,23 @@ Caveat worth reading: absolute counts swing hard between runs (baseline came bac
 367, 650, 596 on identical inputs). The ratios held. [`evals/README.md`](./evals)
 shows all three runs and the ~93% rule-compliance rate.
 
+## Staying current
+
+Plugins pin to the `version` in the manifest, and Claude Code will not tell you
+when a new one lands. Check and update by hand:
+
+```bash
+claude plugin marketplace update iceberg   # refresh the catalog
+claude plugin update iceberg@iceberg       # then the plugin; restart to apply
+```
+
+The skill is a plain file, so re-running `npx skills add hellohelen-ai/iceberg`
+overwrites it with the current version. `install.sh` is re-runnable for the same
+reason.
+
+If you cloned the repo, `git pull` is enough — the hook reads `prompt.md` off
+disk on every turn, so nothing is cached.
+
 ## Customize
 
 Two files, and they say the same thing:
