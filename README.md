@@ -58,7 +58,7 @@ Code, commands, file paths, and exact error strings are never compressed. Only t
 
 ## Install
 
-**The skill.** Works in Claude Code, Codex, Cursor, Windsurf, Cline, Copilot, and 30+ others:
+**The skill.** One command, 17 agents — Codex, Cursor, Warp, Amp, Antigravity, and more, plus a Claude Code symlink:
 
 ```bash
 npx skills add hellohelen-ai/iceberg
@@ -115,7 +115,7 @@ Numbers, units, code blocks, and error strings stay verbatim.
 
 | Method | Agents | Re-injected every turn |
 |---|---|---|
-| `npx skills add` | 30+ | on demand |
+| `npx skills add` | 17 | on demand |
 | Claude Code plugin | Claude Code | yes |
 | `install.sh cursor` | Cursor | yes (`alwaysApply`) |
 | `install.sh windsurf` | Windsurf | yes |
