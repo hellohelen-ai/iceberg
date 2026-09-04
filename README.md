@@ -19,42 +19,56 @@
 
 ## See it
 
+Both of these answer *"I have two async functions that both write to the same
+record and sometimes the second write is lost. What is happening?"* Both are
+correct. Both are real replies from the eval — see `evals/snapshot.json`.
+
 <table>
 <tr>
-<th width="50%">Normal agent</th>
-<th width="50%">Iceberg agent</th>
+<th width="50%">Your agent today · 1,000 tokens</th>
+<th width="50%">With iceberg · 52 tokens</th>
 </tr>
 <tr>
 <td valign="top">
 
-> ## Summary of Changes
+> That's almost certainly a **lost update** race condition. The general mechanism:
 >
-> I've successfully implemented the fix for the authentication issue you described. Here's a breakdown of what I did:
+> 1. Function A reads the record.
+> 2. Function B reads the record (before A's write lands).
+> 3. Function A writes back its version.
+> 4. Function B writes back *its* version — based on the stale read from step 2 — silently clobbering A's write.
 >
-> ### What I changed
-> 1. First, I updated `auth.ts` to refresh the token before the retry
-> 2. Then I added a guard clause to handle the null case
-> 3. Finally, I updated the tests to cover both paths
+> Because both functions are `async`, they interleave at `await` points rather than running atomically…
 >
-> ### Next steps
-> You may want to consider adding telemetry here so you can track how often this path is hit in production. Let me know if you'd like me to do that!
+> **Common concrete causes:**
+> - Read-modify-write pattern instead of an atomic update
+> - `Promise.all`/fire-and-forget with no ordering guarantee
+> - No transaction / isolation at the DB level
+> - No optimistic locking
+>
+> **Typical fixes, roughly in order of preference:**
+> - Use an atomic operation at the storage layer…
+> - Add optimistic concurrency control…
+> - Wrap both operations in a transaction…
+> - Serialize the two writes with a mutex/lock/queue…
+>
+> If you paste the two functions I can point at the exact spot and suggest the minimal fix.
 
 </td>
 <td valign="top">
 
-> Fixed. The retry reused the stale token.
+> Race condition: both functions read-modify-write the same record concurrently, so the second write overwrites the first (lost update).
 >
-> More: why it went stale?
+> More: fix with locking/transactions?
 
 </td>
 </tr>
 </table>
 
-Same fix. Same files. The only thing that died was the throat-clearing.
+Same diagnosis. Same term of art. One of them lets you get back to work.
 
-**83% shorter replies** than your agent gives you today — measured over 15 real prompts, three runs, not estimated. [The harness is in `evals/`](./evals), and it prints the unflattering numbers too.
-
-Code, commands, file paths, and exact error strings are never compressed. Only the prose around them is.
+Code, commands, file paths, and exact error strings are never compressed. Only
+the prose around them is.
 
 ## Install
 
@@ -132,22 +146,23 @@ So `install.sh cursor` lays down two layers: the `alwaysApply` rule, which the e
 
 ## Does it work
 
-Start from what your agent does today with no instructions at all. Call that
-**538 tokens** — the average reply across 15 real dev questions, three runs, on
-Sonnet.
+Start from your agent as it ships — Claude Code, opened, asked a question, no
+rules of any kind added. That is the row called **"your agent today"**. Across 15
+real dev questions and three runs, its average reply is **538 tokens**, roughly
+400 words, or the wall of text in the left column above.
 
-Now add a system prompt and measure again:
+Then add one system prompt and ask the same 15 questions again:
 
-| What you tell the agent | Mean reply | vs. doing nothing |
+| What you add | Mean reply | vs. your agent today |
 |---|---|---|
-| nothing | 538 tokens | — |
+| nothing — your agent today | 538 tokens | — |
 | `Answer concisely.` | 749 tokens | **39% longer** |
 | iceberg's 7 rules | **94 tokens** | **83% shorter** |
 
 Two things fall out of that table.
 
 **Asking for concision backfires.** `Answer concisely.` produced *more* text than
-saying nothing, in all three runs. "Concisely" is an adjective with no target, so
+adding nothing at all, in all three runs. "Concisely" is an adjective with no target, so
 the model keeps the heading, the numbered list, and the closing offer — it just
 feels brisk while writing them.
 
