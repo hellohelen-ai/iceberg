@@ -31,7 +31,7 @@ install_claude() {
   echo "  run these two commands in Claude Code:"
   echo "    /plugin marketplace add hellohelen-ai/iceberg"
   echo "    /plugin install iceberg@iceberg"
-  echo "  or, for 30+ agents:  npx skills add hellohelen-ai/iceberg"
+  echo "  to try it before installing:  claude --plugin-dir $HERE"
 }
 
 # Codex reads the same shape of hook as Claude Code, and its UserPromptSubmit
@@ -47,7 +47,7 @@ write_codex_hook() {
         "hooks": [
           {
             "type": "command",
-            "command": "cat '$PROMPT'"
+            "command": "\"$HERE/hooks/inject.sh\""
           }
         ]
       }

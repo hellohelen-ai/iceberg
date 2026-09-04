@@ -80,12 +80,25 @@ npx skills add hellohelen-ai/iceberg
 
 Say `/iceberg` if your agent does not wake up on its own.
 
-**The plugin.** Claude Code only, and stronger — it re-injects the rules on *every* turn, so they never fall out of context on a long session:
+**The plugin.** Stronger than the skill — it re-injects the rules on *every*
+turn through a `UserPromptSubmit` hook, so they never fall out of context on a
+long session. Claude Code:
 
 ```
 /plugin marketplace add hellohelen-ai/iceberg
 /plugin install iceberg@iceberg
 ```
+
+Try it first, without installing anything:
+
+```bash
+claude --plugin-dir ~/iceberg
+```
+
+Codex reads the same repo — `.codex-plugin/plugin.json` points at the same
+skill and an equivalent hook. Add it to a marketplace catalog at
+`~/.agents/plugins/marketplace.json`, or use `install.sh codex` below, which
+writes a project-level `.codex/hooks.json` and needs no catalog.
 
 **By hand.** Clone it and drop a marked block into whatever file your agent reads:
 
@@ -138,7 +151,7 @@ Numbers, units, code blocks, and error strings stay verbatim.
 
 Per-turn beats read-once. A static instruction file sits a hundred messages back in the context by the time it matters.
 
-Codex hooks take the same shape as Claude Code's, and its `UserPromptSubmit` adds plain stdout to the context — so `install.sh codex` writes a `.codex/hooks.json` as well as the `AGENTS.md` block.
+Codex hooks take the same shape as Claude Code's, and its `UserPromptSubmit` adds plain stdout to the context. Both call the same `hooks/inject.sh`, which resolves `prompt.md` from its own location — so neither has to interpolate a root variable into a `cat` argument. `install.sh codex` writes a `.codex/hooks.json` as well as the `AGENTS.md` block.
 
 Cursor is the exception. It has no `UserPromptSubmit`; `beforeSubmitPrompt` fires every turn but returns only `continue` and `user_message`, so it can block your prompt and never add to it. Only `sessionStart` and `postToolUse` can return `additional_context`.
 
