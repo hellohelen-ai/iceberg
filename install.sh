@@ -58,12 +58,40 @@ JSON
   echo "  updated .codex/hooks.json (injected every turn)"
 }
 
+# Cursor gets two layers. The alwaysApply rule is the one that carries the
+# rules turn to turn. The sessionStart hook is a second copy at the front of the
+# system context — Cursor has no per-turn injecting hook to use instead.
+write_cursor() {
+  mkdir -p .cursor/rules
+  cp "$HERE/adapters/cursor.mdc" .cursor/rules/iceberg.mdc
+  echo "  updated .cursor/rules/iceberg.mdc (alwaysApply)"
+
+  if [ -f .cursor/hooks.json ] && ! grep -q "cursor-context.sh" .cursor/hooks.json; then
+    echo "  .cursor/hooks.json already exists and is not ours — left alone."
+    echo "  To add the second layer by hand, register this under sessionStart:"
+    echo "    $HERE/hooks/cursor-context.sh"
+    return
+  fi
+
+  cat > .cursor/hooks.json <<JSON
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      { "command": "$HERE/hooks/cursor-context.sh" }
+    ]
+  }
+}
+JSON
+  echo "  updated .cursor/hooks.json (sessionStart)"
+}
+
 install_target() {
   case "$1" in
     claude)   install_claude ;;
     codex)    echo "codex:";    write_codex_hook; write_block "AGENTS.md" ;;
     agents)   echo "agents.md:"; write_block "AGENTS.md" ;;
-    cursor)   echo "cursor:";   mkdir -p .cursor/rules; cp "$HERE/adapters/cursor.mdc" .cursor/rules/iceberg.mdc; echo "  updated .cursor/rules/iceberg.mdc" ;;
+    cursor)   echo "cursor:";   write_cursor ;;
     windsurf) echo "windsurf:"; write_block ".windsurf/rules/iceberg.md" ;;
     copilot)  echo "copilot:";  write_block ".github/copilot-instructions.md" ;;
     *) echo "unknown target: $1"; exit 1 ;;

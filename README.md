@@ -126,7 +126,9 @@ Per-turn beats read-once. A static instruction file sits a hundred messages back
 
 Codex hooks take the same shape as Claude Code's, and its `UserPromptSubmit` adds plain stdout to the context — so `install.sh codex` writes a `.codex/hooks.json` as well as the `AGENTS.md` block.
 
-Cursor is the exception. Its `beforeSubmitPrompt` hook fires every turn but cannot inject context; only `sessionStart` can, and that runs once. So Cursor gets an `alwaysApply` rule instead, which the editor re-sends anyway.
+Cursor is the exception. It has no `UserPromptSubmit`; `beforeSubmitPrompt` fires every turn but returns only `continue` and `user_message`, so it can block your prompt and never add to it. Only `sessionStart` and `postToolUse` can return `additional_context`.
+
+So `install.sh cursor` lays down two layers: the `alwaysApply` rule, which the editor re-sends turn to turn, and a `sessionStart` hook that puts a copy at the front of the system context. If you already have a `.cursor/hooks.json`, the installer leaves it alone and prints the one line to add.
 
 ## Does it work
 
