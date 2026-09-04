@@ -52,7 +52,7 @@
 
 Same fix. Same files. The only thing that died was the throat-clearing.
 
-**5.7× shorter replies** than your agent gives you today — measured over 15 real prompts, three runs, not estimated. [The harness is in `evals/`](./evals), and it prints the unflattering numbers too.
+**83% shorter replies** than your agent gives you today — measured over 15 real prompts, three runs, not estimated. [The harness is in `evals/`](./evals), and it prints the unflattering numbers too.
 
 Code, commands, file paths, and exact error strings are never compressed. Only the prose around them is.
 
@@ -142,7 +142,7 @@ Now add a system prompt and measure again:
 |---|---|---|
 | nothing | 538 tokens | — |
 | `Answer concisely.` | 749 tokens | **39% longer** |
-| iceberg's 7 rules | **94 tokens** | **5.7× shorter** |
+| iceberg's 7 rules | **94 tokens** | **83% shorter** |
 
 Two things fall out of that table.
 
@@ -152,8 +152,8 @@ the model keeps the heading, the numbered list, and the closing offer — it jus
 feels brisk while writing them.
 
 **Rules work where adjectives don't.** A four-line ceiling, a required shape, and
-a named thing to omit get you 5.7× shorter than baseline, and 8× shorter than the
-concision ask most people reach for first.
+a named thing to omit get you replies 83% shorter than your agent's default — and
+87% shorter than the concision ask most people reach for first.
 
 Token counts come straight from `usage.output_tokens`. Every raw reply is in
 `evals/snapshot.json`. Reproduce it with `python3 evals/run.py` — about $2 on
