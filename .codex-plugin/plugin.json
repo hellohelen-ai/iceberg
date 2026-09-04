@@ -1,6 +1,6 @@
 {
   "name": "iceberg",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Show 1/8, keep 7/8 below the surface. One-line answers, a four-line ceiling, no summary blocks.",
   "skills": "./skills/",
   "hooks": "./hooks/codex-hooks.json",

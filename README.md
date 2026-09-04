@@ -193,12 +193,25 @@ shows all three runs and the ~93% rule-compliance rate.
 
 ## Staying current
 
-Plugins pin to the `version` in the manifest, and Claude Code will not tell you
-when a new one lands. Check and update by hand:
+Iceberg tells you when it is out of date, then updates itself:
+
+```
+iceberg 0.3.0 → 0.4.0 available. Run /iceberg:update.
+```
+
+A `SessionStart` hook prints that line, and `/iceberg:update` does the work.
+
+The check never costs you a wait. It reads a cache the *previous* session left
+behind and refreshes it in a detached background process, at most once a day. No
+cache, no network, or no newer tag means the hook prints nothing at all — a
+plugin that sells brevity should not spend your context on its own release
+notes.
+
+To update by hand instead:
 
 ```bash
-claude plugin marketplace update iceberg   # refresh the catalog
-claude plugin update iceberg@iceberg       # then the plugin; restart to apply
+claude plugin marketplace update iceberg
+claude plugin update iceberg@iceberg
 ```
 
 The skill is a plain file, so re-running `npx skills add hellohelen-ai/iceberg`
