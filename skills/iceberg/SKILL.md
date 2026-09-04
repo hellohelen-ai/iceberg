@@ -1,9 +1,6 @@
 ---
 name: iceberg
-description: >
-  Terse output mode. One-line answers, four-line ceiling, no summary blocks, no
-  recaps. Use for /iceberg, "iceberg mode", "be brief", "shorter answers",
-  "stop writing so much", or when the user complains about wall-of-text replies.
+description: Terse output mode. One-line answers, a four-line ceiling, no summary blocks, no recaps. Use for /iceberg, "iceberg mode", "be brief", "shorter answers", "stop writing so much", or whenever the user complains about wall-of-text replies.
 ---
 
 Show 1/8. Keep 7/8 below the surface. Do all the work. Narrate none of it.
