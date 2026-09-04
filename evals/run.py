@@ -28,6 +28,11 @@ ARMS = {
     "iceberg": TERSE + "\n\n" + (ROOT / "prompt.md").read_text(),
 }
 
+# An optional fourth arm, for comparing against another terseness skill. Point
+# --compare at its rule file. Not part of the published numbers.
+def add_compare_arm(path: str) -> None:
+    ARMS["compare"] = TERSE + "\n\n" + Path(path).read_text()
+
 
 def ask(prompt: str, system: str | None, model: str) -> dict:
     cmd = ["claude", "-p", "--model", model, "--output-format", "json",
@@ -98,6 +103,8 @@ def report(snapshot: dict) -> None:
         return (a - b) / a * 100
 
     print(f"\n  iceberg vs terse      {cut('terse', 'iceberg'):5.0f}%  <- the honest number")
+    if "compare" in by_arm:
+        print(f"  compare vs terse      {cut('terse', 'compare'):5.0f}%")
     print(f"  iceberg vs baseline   {cut('baseline', 'iceberg'):5.0f}%")
     print(f"  terse vs baseline     {cut('baseline', 'terse'):5.0f}%")
 
@@ -113,7 +120,11 @@ def main() -> None:
     ap.add_argument("--model", default="sonnet")
     ap.add_argument("--workers", type=int, default=5)
     ap.add_argument("--report", action="store_true", help="re-print from snapshot.json")
+    ap.add_argument("--compare", metavar="RULEFILE", help="add a fourth arm from another skill's rule file")
     args = ap.parse_args()
+
+    if args.compare:
+        add_compare_arm(args.compare)
 
     if args.report:
         if not SNAPSHOT.exists():

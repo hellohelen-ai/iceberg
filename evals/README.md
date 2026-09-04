@@ -56,6 +56,27 @@ line ceiling, a required shape, and a named thing to omit.
 
 One run, one model, 15 prompts. Take it as a strong hint, not a law.
 
+## Variance
+
+Absolute token counts move a lot between runs. A second pass of the same 15
+prompts put `baseline` at 650 mean instead of 367, and `terse` at 847 instead of
+524 — the models are not deterministic and neither is their appetite for
+headings.
+
+The *ratio* held: 84% in the first run, 89% in the second. The published claim
+is the lower one. Re-run it yourself before quoting a different figure.
+
+## Comparing against another skill
+
+```bash
+python3 run.py --compare /path/to/other/SKILL.md
+```
+
+Adds a fourth arm from any other rule file. Useful for checking where you sit,
+but token count alone will mislead you: a skill that compresses a full answer
+and a skill that withholds most of the answer until asked are not doing the same
+job, and the shorter one is not automatically better.
+
 ## Compliance
 
 `prose_lines()` in `run.py` counts what the limit covers. Fenced code blocks
