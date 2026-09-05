@@ -34,29 +34,51 @@ install_claude() {
   echo "  to try it before installing:  claude --plugin-dir $HERE"
 }
 
-# Codex reads the same shape of hook as Claude Code, and its UserPromptSubmit
-# adds plain stdout to the context. So Codex gets per-turn injection too, not
-# just a file it reads once at session start. inject.sh picks the rule file:
-# short.md normally, long.md on a turn that carries a -a.
+# Codex does not read .codex/hooks.json, and it does not read hooks from a
+# project directory at all. Hooks live in $CODEX_HOME/config.toml (user scope,
+# ~/.codex/config.toml by default). Verified against codex-cli 0.153.2: a
+# project .codex/hooks.json and a project .codex/config.toml both fire nothing;
+# the same handler in the user config.toml fires.
+#
+# Codex also gates every hook behind a trust hash it computes itself, so writing
+# the block is not enough — the user has to approve the hook once inside Codex.
+# We cannot forge that hash, and should not try.
+CODEX_HOME_DIR="${CODEX_HOME:-$HOME/.codex}"
+TOML_BEGIN="# iceberg:begin"
+TOML_END="# iceberg:end"
+
 write_codex_hook() {
-  mkdir -p .codex
-  cat > .codex/hooks.json <<JSON
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$HERE/hooks/inject.sh\""
-          }
-        ]
-      }
-    ]
-  }
-}
-JSON
-  echo "  updated .codex/hooks.json (injected every turn, -a aware)"
+  local file="$CODEX_HOME_DIR/config.toml"
+  mkdir -p "$CODEX_HOME_DIR"
+  touch "$file"
+
+  if grep -qF "$TOML_BEGIN" "$file"; then
+    awk -v b="$TOML_BEGIN" -v e="$TOML_END" '
+      index($0,b){skip=1} !skip{print} index($0,e){skip=0}
+    ' "$file" > "$file.iceberg.tmp"
+    mv "$file.iceberg.tmp" "$file"
+  fi
+
+  {
+    printf '\n%s\n' "$TOML_BEGIN"
+    printf '[[hooks.UserPromptSubmit]]\n'
+    printf 'description = "iceberg — inject the rules; a bare -a swaps in the long form"\n'
+    printf '[[hooks.UserPromptSubmit.hooks]]\n'
+    printf 'type = "command"\n'
+    printf 'command = "%s/hooks/inject.sh"\n' "$HERE"
+    printf '%s\n' "$TOML_END"
+  } >> "$file"
+
+  # An earlier version of this script wrote a project hook file that Codex
+  # never read. Clear it so nobody debugs a file that does nothing.
+  if [ -f .codex/hooks.json ] && grep -q "inject.sh" .codex/hooks.json; then
+    rm -f .codex/hooks.json
+    echo "  removed .codex/hooks.json (Codex never read it)"
+  fi
+
+  echo "  updated $file (UserPromptSubmit, -a aware)"
+  echo "  one more step: open Codex and approve the iceberg hook."
+  echo "  Codex will not run an untrusted hook, and only Codex can trust it."
 }
 
 # Cursor gets two layers. The alwaysApply rule is the one that carries the
