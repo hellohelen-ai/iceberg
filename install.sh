@@ -5,11 +5,11 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROMPT="$HERE/prompt.md"
+SHORT="$HERE/short.md"
 BEGIN="<!-- iceberg:begin -->"
 END="<!-- iceberg:end -->"
 
-[ -f "$PROMPT" ] || { echo "missing prompt.md"; exit 1; }
+[ -f "$SHORT" ] || { echo "missing short.md"; exit 1; }
 
 write_block() {
   local file="$1"
@@ -22,7 +22,7 @@ write_block() {
     ' "$file" > "$file.iceberg.tmp"
     mv "$file.iceberg.tmp" "$file"
   fi
-  { printf '\n%s\n' "$BEGIN"; cat "$PROMPT"; printf '%s\n' "$END"; } >> "$file"
+  { printf '\n%s\n' "$BEGIN"; cat "$SHORT"; printf '%s\n' "$END"; } >> "$file"
   echo "  updated $file"
 }
 
@@ -37,7 +37,7 @@ install_claude() {
 # Codex reads the same shape of hook as Claude Code, and its UserPromptSubmit
 # adds plain stdout to the context. So Codex gets per-turn injection too, not
 # just a file it reads once at session start. inject.sh picks the rule file:
-# prompt.md normally, expand.md on a turn that carries a -a.
+# short.md normally, long.md on a turn that carries a -a.
 write_codex_hook() {
   mkdir -p .codex
   cat > .codex/hooks.json <<JSON

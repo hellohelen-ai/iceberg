@@ -20,7 +20,7 @@ if [ -f .cursor/hooks.json ] && grep -q "cursor-context.sh" .cursor/hooks.json; 
 fi
 
 # Only remove the Codex hook file if it is ours and holds nothing else.
-if [ -f .codex/hooks.json ] && grep -q "iceberg\|prompt.md" .codex/hooks.json; then
+if [ -f .codex/hooks.json ] && grep -q "iceberg\|short.md" .codex/hooks.json; then
   rm -f .codex/hooks.json && echo "removed .codex/hooks.json"
 fi
 echo "done."

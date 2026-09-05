@@ -10,9 +10,9 @@
 set -eu
 
 DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-PROMPT="$DIR/prompt.md"
+SHORT="$DIR/short.md"
 
-[ -f "$PROMPT" ] || { echo '{"additional_context":""}'; exit 0; }
+[ -f "$SHORT" ] || { echo '{"additional_context":""}'; exit 0; }
 
 awk '
   BEGIN { printf "{\"additional_context\":\"" }
@@ -24,4 +24,4 @@ awk '
     printf "%s\\n", line
   }
   END { print "\"}" }
-' "$PROMPT"
+' "$SHORT"

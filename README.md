@@ -158,12 +158,12 @@ The same shape now applies to the four words that already lifted the ceiling:
 Say *"stop iceberg"* or *"normal mode"* to end it for the session.
 
 **How the plugin does it.** The `UserPromptSubmit` hook reads your message and
-*swaps* the injected rules — `prompt.md` on a normal turn, `expand.md` on a `-a`
+*swaps* the injected rules — `short.md` on a normal turn, `long.md` on a `-a`
 turn. It never injects both. Terse rules and expanded rules contradict each other
 on purpose, so only one of them is ever in the context.
 
 One known collision: `-a` is a real flag, so *"run `git commit -a`"* trips the
-match. The hook hands the model `expand.md`, and `expand.md`'s last line tells it
+match. The hook hands the model `long.md`, and `long.md`'s last line tells it
 to fall back to four lines when the `-a` belongs to a command. The cost of a false
 positive is a few tokens, never a wrong answer.
 
@@ -191,7 +191,7 @@ alongside it.
 
 Per-turn beats read-once. A static instruction file sits a hundred messages back in the context by the time it matters.
 
-Codex hooks take the same shape as Claude Code's, and its `UserPromptSubmit` adds plain stdout to the context. Both call the same `hooks/inject.sh`, which resolves the rule file — `prompt.md`, or `expand.md` on a `-a` turn — from its own location, so neither has to interpolate a root variable into a `cat` argument. `install.sh codex` writes a `.codex/hooks.json` as well as the `AGENTS.md` block.
+Codex hooks take the same shape as Claude Code's, and its `UserPromptSubmit` adds plain stdout to the context. Both call the same `hooks/inject.sh`, which resolves the rule file — `short.md`, or `long.md` on a `-a` turn — from its own location, so neither has to interpolate a root variable into a `cat` argument. `install.sh codex` writes a `.codex/hooks.json` as well as the `AGENTS.md` block.
 
 Cursor is the exception. It has no `UserPromptSubmit`; `beforeSubmitPrompt` fires every turn but returns only `continue` and `user_message`, so it can block your prompt and never add to it. Only `sessionStart` and `postToolUse` can return `additional_context`.
 
@@ -261,15 +261,15 @@ The skill is a plain file, so re-running `npx skills add hellohelen-ai/iceberg`
 overwrites it with the current version. `install.sh` is re-runnable for the same
 reason.
 
-If you cloned the repo, `git pull` is enough — the hook reads `prompt.md` off
+If you cloned the repo, `git pull` is enough — the hook reads `short.md` off
 disk on every turn, so nothing is cached.
 
 ## Customize
 
 Three files, and they say the same thing in three lengths:
 
-- `prompt.md` — the short form the hook injects on a normal turn
-- `expand.md` — what the hook injects instead on a `-a` turn
+- `short.md` — the short form the hook injects on a normal turn
+- `long.md` — what the hook injects instead on a `-a` turn
 - `skills/iceberg/SKILL.md` — the long form an agent loads on demand
 
 Edit any of them. Change the line limit, drop rule 5, move `-a` to `-v`, add your

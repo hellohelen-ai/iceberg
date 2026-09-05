@@ -3,16 +3,16 @@
 # hook's stdout to the model's context, so this one script serves both.
 #
 # It picks one rule file per turn:
-#   bare -a in the message -> expand.md   (the long answer, kept in shape)
-#   otherwise              -> prompt.md   (the four-line rules)
+#   bare -a in the message -> long.md   (the long answer, kept in shape)
+#   otherwise              -> short.md   (the four-line rules)
 #
 # It swaps, it never appends. The terse rules and the expanded rules contradict
 # each other by design, so only one of them may be in the context at a time.
 set -eu
 
 DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-PROMPT="$DIR/prompt.md"
-EXPAND="$DIR/expand.md"
+SHORT="$DIR/short.md"
+LONG="$DIR/long.md"
 
 payload=$(cat)
 
@@ -32,12 +32,12 @@ else
 fi
 
 # -a is also a real flag, so `git commit -a` matches here. The hook cannot tell
-# the two apart; expand.md ends with the line that lets the model decide. A
+# the two apart; long.md ends with the line that lets the model decide. A
 # false positive costs a few tokens, never a wrong answer.
-if printf '%s' "$user_prompt" | grep -qE "$FLAG" && [ -f "$EXPAND" ]; then
-  cat "$EXPAND"
-elif [ -f "$PROMPT" ]; then
-  cat "$PROMPT"
+if printf '%s' "$user_prompt" | grep -qE "$FLAG" && [ -f "$LONG" ]; then
+  cat "$LONG"
+elif [ -f "$SHORT" ]; then
+  cat "$SHORT"
 fi
 
 exit 0
