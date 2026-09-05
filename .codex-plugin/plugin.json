@@ -1,7 +1,7 @@
 {
   "name": "iceberg",
-  "version": "0.3.3",
-  "description": "Show 1/8, keep 7/8 below the surface. One-line answers, a four-line ceiling, no summary blocks.",
+  "version": "0.4.0",
+  "description": "Show 1/8, keep 7/8 below the surface. One-line answers, a four-line ceiling, no summary blocks, and -a for depth.",
   "skills": "./skills/",
   "hooks": "./hooks/codex-hooks.json",
   "author": {
@@ -20,8 +20,8 @@
   ],
   "interface": {
     "displayName": "Iceberg",
-    "shortDescription": "Make your agent laconic. One-line answers, full accuracy.",
-    "longDescription": "Terse output mode. The agent answers on line one and stops, offers detail instead of dumping it, holds a four-line ceiling, and never recaps its own diff. Code, commands, and error strings are never compressed. Measured at 83% shorter replies than the agent's default.",
+    "shortDescription": "Make your agent laconic. One-line answers, full accuracy, -a for depth.",
+    "longDescription": "Terse output mode. The agent answers on line one and stops, offers detail instead of dumping it, holds a four-line ceiling, and never recaps its own diff. Code, commands, and error strings are never compressed. Measured at 83% shorter replies than the agent's default. Put a bare -a in a message and the rules swap: the ceiling lifts to 40 lines, the shape holds, and the reply still lands 82% under a plain ask for detail.",
     "developerName": "hellohelen-ai",
     "category": "Productivity",
     "capabilities": [

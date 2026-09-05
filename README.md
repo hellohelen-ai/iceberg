@@ -96,9 +96,9 @@ claude --plugin-dir ~/iceberg
 ```
 
 Codex reads the same repo — `.codex-plugin/plugin.json` points at the same
-skill and an equivalent hook. Add it to a marketplace catalog at
-`~/.agents/plugins/marketplace.json`, or use `install.sh codex` below, which
-writes a project-level `.codex/hooks.json` and needs no catalog.
+skill. Add it to a marketplace catalog at `~/.agents/plugins/marketplace.json`,
+or use `install.sh codex` below, which writes the hook into your Codex config
+and needs no catalog. Codex asks you to approve the hook once; see below.
 
 **By hand.** Clone it and drop a marked block into whatever file your agent reads:
 
@@ -179,7 +179,7 @@ Numbers, units, code blocks, and error strings stay verbatim.
 |---|---|---|
 | `npx skills add` | 17 | on demand |
 | Claude Code plugin | Claude Code | yes — `UserPromptSubmit` hook |
-| `install.sh codex` | Codex | yes — `UserPromptSubmit` hook |
+| `install.sh codex` | Codex | yes — `UserPromptSubmit` hook, after you approve it |
 | `install.sh cursor` | Cursor | yes — `alwaysApply` rule |
 | `install.sh windsurf` | Windsurf | yes |
 | `install.sh copilot` | Copilot | read once |
@@ -191,7 +191,15 @@ alongside it.
 
 Per-turn beats read-once. A static instruction file sits a hundred messages back in the context by the time it matters.
 
-Codex hooks take the same shape as Claude Code's, and its `UserPromptSubmit` adds plain stdout to the context. Both call the same `hooks/inject.sh`, which resolves the rule file — `short.md`, or `long.md` on a `-a` turn — from its own location, so neither has to interpolate a root variable into a `cat` argument. `install.sh codex` writes a `.codex/hooks.json` as well as the `AGENTS.md` block.
+Codex takes the same `UserPromptSubmit` event and the same handler shape as Claude Code, and calls the same `hooks/inject.sh`. The script resolves its rule file — `short.md`, or `long.md` on a `-a` turn — from its own location, so neither agent has to interpolate a root variable into a `cat` argument.
+
+**Codex keeps hooks in one place, and it is not your project.** Tested against `codex-cli 0.153.2`: a project `.codex/hooks.json` fires nothing, and so does a project `.codex/config.toml`. The handler has to live in `$CODEX_HOME/config.toml` — `~/.codex/config.toml` by default. Earlier iceberg releases wrote the project file, so Codex users got the `AGENTS.md` block and nothing else. `install.sh codex` now writes a marked block into the Codex config, and removes the dead project file if it finds one.
+
+**Codex will not run a hook you have not approved.** Every handler carries a trust hash that Codex computes itself, and an unapproved handler is skipped in silence — no warning, no output. No installer can forge that hash, and iceberg does not try. Run `install.sh codex`, open Codex, approve the iceberg hook once.
+
+Because the config is user-scoped, `install.sh codex` is the one target that reaches outside the current project. `uninstall.sh` takes the block back out.
+
+The Codex *plugin* route carries the skill only. `codex features list` reports `plugin_hooks` as **removed**, so the `hooks` key in `.codex-plugin/plugin.json` is inert on 0.153.2 — the marketplace install gives you the rules, and `install.sh codex` gives you the per-turn swap.
 
 Cursor is the exception. It has no `UserPromptSubmit`; `beforeSubmitPrompt` fires every turn but returns only `continue` and `user_message`, so it can block your prompt and never add to it. Only `sessionStart` and `postToolUse` can return `additional_context`.
 

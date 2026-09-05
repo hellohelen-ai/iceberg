@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "iceberg",
-  "description": "Make your coding agent laconic. 84% fewer output tokens than 'Answer concisely.' (measured), full technical accuracy.",
+  "description": "Make your coding agent laconic. 84% fewer output tokens than 'Answer concisely.' (measured), full technical accuracy. Add -a when you want the long answer.",
   "owner": {
     "name": "hellohelen-ai",
     "url": "https://github.com/hellohelen-ai"
@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "iceberg",
-      "description": "Show 1/8, keep 7/8 below the surface. Terse output, full technical accuracy.",
+      "description": "Show 1/8, keep 7/8 below the surface. Terse output, full technical accuracy, and a -a flag for depth on demand.",
       "source": "./",
       "category": "productivity"
     }
