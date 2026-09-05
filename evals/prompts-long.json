@@ -1,0 +1,14 @@
+[
+  {"id": "monolith-split", "prompt": "We have a Rails monolith and 40 engineers. Should we split it into services? -a"},
+  {"id": "jwt-storage", "prompt": "Should I store my JWT in localStorage or an httpOnly cookie? -a"},
+  {"id": "rn-cold-start", "prompt": "Our React Native app takes 30 seconds to cold start. Where do we start? -a"},
+  {"id": "queue-choice", "prompt": "SQS, Kafka or Postgres as the job queue for 5000 jobs a minute? -a"},
+  {"id": "auth-design", "prompt": "Design the auth for a B2B SaaS with SSO, API keys and per-org roles. -a"},
+  {"id": "column-rename", "prompt": "How do I rename a column on a 200M row Postgres table with zero downtime? -a"},
+  {"id": "k8s-oom", "prompt": "Our pods OOMKill under load but the JVM heap stays flat. What is going on? -a"},
+  {"id": "cache-strategy", "prompt": "What caching strategy fits a read-heavy API where every response is per-user? -a"},
+  {"id": "monorepo", "prompt": "Should we move our 6 repos into a monorepo? -a"},
+  {"id": "ts-strict", "prompt": "How do we turn on TypeScript strict mode across a 300k line codebase? -a"},
+  {"id": "bad-deploy", "prompt": "A bad deploy caused a 40 minute API outage. What goes on the fix list? -a"},
+  {"id": "vector-db", "prompt": "Do we need a vector database, or is pgvector enough for 2M documents? -a"}
+]

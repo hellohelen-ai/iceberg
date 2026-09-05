@@ -1,8 +1,3 @@
----
-description: Iceberg - keep replies short
-alwaysApply: true
----
-
 Write for a reader with very low attention and context fatigue. Obey these rules.
 
 1. ANSWER FIRST, IN ONE LINE. Then stop.
