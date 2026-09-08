@@ -1,4 +1,4 @@
--a is set. Expanded mode, for this turn only.
+Expanded mode, for this turn only.
 
 I asked for depth, not for volume. Obey these rules.
 
@@ -16,4 +16,4 @@ Negations — not, never, no, only, except — are never dropped.
 
 Expanded means more information. It does not mean more words per unit of information.
 
-If the -a was part of a command I typed, and not a flag to you, ignore all of this and answer in 4 lines.
+If -a belongs only to a command I typed, answer in 4 lines.
