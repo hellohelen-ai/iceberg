@@ -1,29 +1,25 @@
 #!/usr/bin/env bash
 # iceberg — make your coding agent laconic.
 # Usage:  ./install.sh [target ...]   targets: claude codex cursor windsurf copilot agents all
-# Adds a marked block to the agent's instruction file. Re-runnable. Remove with ./uninstall.sh
+# Hook installs inject one prompt per turn; other targets install the skill.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SHORT="$HERE/short.md"
-BEGIN="<!-- iceberg:begin -->"
-END="<!-- iceberg:end -->"
+SKILL="$HERE/skills/iceberg/SKILL.md"
+source "$HERE/scripts/install-common.sh"
 
-[ -f "$SHORT" ] || { echo "missing short.md"; exit 1; }
+[ -f "$SKILL" ] || { echo "missing skills/iceberg/SKILL.md"; exit 1; }
 
-write_block() {
-  local file="$1"
-  mkdir -p "$(dirname "$file")"
-  touch "$file"
-  # strip any previous block
-  if grep -qF "$BEGIN" "$file"; then
-    awk -v b="$BEGIN" -v e="$END" '
-      index($0,b){skip=1} !skip{print} index($0,e){skip=0}
-    ' "$file" > "$file.iceberg.tmp"
-    mv "$file.iceberg.tmp" "$file"
+install_skill() {
+  local dir="$1" file="$1/SKILL.md"
+  if [ -L "$dir" ] || [ -L "$file" ] || { [ -f "$file" ] && [ ! -f "$dir/.iceberg-installed" ]; }; then
+    echo "  $file already exists outside install.sh; update it with its original installer."
+    return 1
   fi
-  { printf '\n%s\n' "$BEGIN"; cat "$SHORT"; printf '%s\n' "$END"; } >> "$file"
-  echo "  updated $file"
+  mkdir -p "$dir"
+  cp "$SKILL" "$file"
+  touch "$dir/.iceberg-installed"
+  echo "  installed $file (on demand; say 'use iceberg mode' to activate)"
 }
 
 install_claude() {
@@ -81,42 +77,36 @@ write_codex_hook() {
   echo "  Codex will not run an untrusted hook, and only Codex can trust it."
 }
 
-# Cursor gets two layers. The alwaysApply rule is the one that carries the
-# rules turn to turn. The sessionStart hook is a second copy at the front of the
-# system context — Cursor has no per-turn injecting hook to use instead.
-write_cursor() {
-  mkdir -p .cursor/rules
-  cp "$HERE/adapters/cursor.mdc" .cursor/rules/iceberg.mdc
-  echo "  updated .cursor/rules/iceberg.mdc (alwaysApply)"
-
-  if [ -f .cursor/hooks.json ] && ! grep -q "cursor-context.sh" .cursor/hooks.json; then
-    echo "  .cursor/hooks.json already exists and is not ours — left alone."
-    echo "  To add the second layer by hand, register this under sessionStart:"
-    echo "    $HERE/hooks/cursor-context.sh"
-    return
-  fi
-
-  cat > .cursor/hooks.json <<JSON
-{
-  "version": 1,
-  "hooks": {
-    "sessionStart": [
-      { "command": "$HERE/hooks/cursor-context.sh" }
-    ]
-  }
-}
-JSON
-  echo "  updated .cursor/hooks.json (sessionStart)"
-}
-
 install_target() {
   case "$1" in
     claude)   install_claude ;;
-    codex)    echo "codex:";    write_codex_hook; write_block "AGENTS.md" ;;
-    agents)   echo "agents.md:"; write_block "AGENTS.md" ;;
-    cursor)   echo "cursor:";   write_cursor ;;
-    windsurf) echo "windsurf:"; write_block ".windsurf/rules/iceberg.md" ;;
-    copilot)  echo "copilot:";  write_block ".github/copilot-instructions.md" ;;
+    codex)
+      echo "codex:"
+      write_codex_hook
+      remove_block "AGENTS.md"
+      ;;
+    agents)
+      echo "agents:"
+      install_skill ".agents/skills/iceberg"
+      remove_block "AGENTS.md"
+      ;;
+    cursor)
+      echo "cursor:"
+      install_skill ".cursor/skills/iceberg"
+      remove_cursor_rules
+      prune_empty_dirs .cursor/rules
+      ;;
+    windsurf)
+      echo "windsurf:"
+      install_skill ".windsurf/skills/iceberg"
+      remove_block ".windsurf/rules/iceberg.md"
+      prune_empty_dirs .windsurf/rules
+      ;;
+    copilot)
+      echo "copilot:"
+      install_skill ".github/skills/iceberg"
+      remove_block ".github/copilot-instructions.md"
+      ;;
     *) echo "unknown target: $1"; exit 1 ;;
   esac
 }

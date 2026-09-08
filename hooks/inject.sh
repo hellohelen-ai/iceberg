@@ -6,8 +6,8 @@
 #   bare -a in the message -> long.md   (the long answer, kept in shape)
 #   otherwise              -> short.md   (the four-line rules)
 #
-# It swaps, it never appends. The terse rules and the expanded rules contradict
-# each other by design, so only one of them may be in the context at a time.
+# Emit exactly one rule file per invocation. Earlier turns may remain in the
+# conversation; each prompt scopes its rules to the current turn.
 set -eu
 
 DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
@@ -33,7 +33,7 @@ fi
 
 # -a is also a real flag, so `git commit -a` matches here. The hook cannot tell
 # the two apart; long.md ends with the line that lets the model decide. A
-# false positive costs a few tokens, never a wrong answer.
+# false positive therefore still needs a short-answer guard in long.md.
 if printf '%s' "$user_prompt" | grep -qE "$FLAG" && [ -f "$LONG" ]; then
   cat "$LONG"
 elif [ -f "$SHORT" ]; then

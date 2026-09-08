@@ -21,7 +21,7 @@
 
 Both of these answer *"I have two async functions that both write to the same
 record and sometimes the second write is lost. What is happening?"* Both are
-correct. Both are real replies from the eval — see `evals/snapshot.json`.
+correct. Both are real replies from the eval — see `evals/snapshot-short.json`.
 
 <table>
 <tr>
@@ -72,17 +72,18 @@ the prose around them is.
 
 ## Install
 
-**The skill.** One command, 17 agents — Codex, Cursor, Warp, Amp, Antigravity, and more, plus a Claude Code symlink:
+**The skill.** For agents without a per-prompt hook, install the self-contained skill:
 
 ```bash
 npx skills add hellohelen-ai/iceberg
 ```
 
-Say `/iceberg` if your agent does not wake up on its own.
+Say "use iceberg mode" to activate it, or use your agent's skill command
+(`/iceberg` in Cursor, `@iceberg` in Windsurf). The full rules load on demand.
 
-**The plugin.** Stronger than the skill — it re-injects the rules on *every*
-turn through a `UserPromptSubmit` hook, so they never fall out of context on a
-long session. Claude Code:
+**The hook.** It injects one compact rule file on every prompt: `long.md` if
+the message contains a standalone `-a`, otherwise `short.md`. You do not need
+to activate the skill as well. For Claude Code, install the plugin:
 
 ```
 /plugin marketplace add hellohelen-ai/iceberg
@@ -100,15 +101,19 @@ skill. Add it to a marketplace catalog at `~/.agents/plugins/marketplace.json`,
 or use `install.sh codex` below, which writes the hook into your Codex config
 and needs no catalog. Codex asks you to approve the hook once; see below.
 
-**By hand.** Clone it and drop a marked block into whatever file your agent reads:
+**By hand.** Clone it and install a hook or a project skill:
 
 ```bash
 git clone https://github.com/hellohelen-ai/iceberg.git ~/iceberg
 cd your-project
-~/iceberg/install.sh all      # or: codex cursor windsurf copilot
+~/iceberg/install.sh codex    # per-prompt hook in your Codex config
+~/iceberg/install.sh cursor   # or: windsurf copilot agents, for a project skill
+# ~/iceberg/install.sh all    # all targets, including the Codex hook
 ```
 
-Re-runnable. `~/iceberg/uninstall.sh` removes every block it added.
+Re-runnable. `~/iceberg/uninstall.sh` removes the hook and project skills
+managed by this script, plus legacy static installs. Plugin-manager and
+`npx skills add` installs are managed separately.
 
 ## The rules
 
@@ -151,21 +156,24 @@ restated back at you, "great question", and the closing offer of more help are c
 in both modes. **Expanded means more information — not more words per unit of
 information.**
 
-The same shape now applies to the four words that already lifted the ceiling:
+With the **standalone skill**, **explain**, **in detail**, **walk me through**,
+and **report** also request the expanded shape. Say *"stop iceberg"* or
+*"normal mode"* to end the skill's style for the session.
 
-**explain** · **in detail** · **walk me through** · **report**
-
-Say *"stop iceberg"* or *"normal mode"* to end it for the session.
+With the **hook**, only `-a` selects the expanded prompt. Words such as
+"explain" still get the short prompt. Disable or uninstall the hook to stop
+automatic injection.
 
 **How the plugin does it.** The `UserPromptSubmit` hook reads your message and
 *swaps* the injected rules — `short.md` on a normal turn, `long.md` on a `-a`
-turn. It never injects both. Terse rules and expanded rules contradict each other
-on purpose, so only one of them is ever in the context.
+turn. Each invocation emits just one file. Earlier turns can remain in the
+conversation, so each prompt scopes its rules to the current turn. The short
+prompt carries no expanded-mode rules or routing instructions.
 
 One known collision: `-a` is a real flag, so *"run `git commit -a`"* trips the
 match. The hook hands the model `long.md`, and `long.md`'s last line tells it
-to fall back to four lines when the `-a` belongs to a command. The cost of a false
-positive is a few tokens, never a wrong answer.
+to answer in four lines when `-a` belongs only to a command. This semantic
+exception stays in the expanded prompt because the regex cannot resolve it.
 
 ## What never gets cut
 
@@ -175,25 +183,29 @@ Numbers, units, code blocks, and error strings stay verbatim.
 
 ## Which install should I use?
 
-| Method | Agents | Re-injected every turn |
+| Method | What it installs | When full rules load |
 |---|---|---|
-| `npx skills add` | 17 | on demand |
-| Claude Code plugin | Claude Code | yes — `UserPromptSubmit` hook |
-| `install.sh codex` | Codex | yes — `UserPromptSubmit` hook, after you approve it |
-| `install.sh cursor` | Cursor | yes — `alwaysApply` rule |
-| `install.sh windsurf` | Windsurf | yes |
-| `install.sh copilot` | Copilot | read once |
+| `npx skills add` | Standalone skill for your selected agents | On demand |
+| Claude Code plugin | Per-prompt hook; skill also available | One prompt file per turn |
+| `install.sh codex` | User-level `UserPromptSubmit` hook | One prompt file per turn, after approval |
+| `install.sh cursor` | `.cursor/skills/iceberg/SKILL.md` | On demand |
+| `install.sh windsurf` | `.windsurf/skills/iceberg/SKILL.md` | On demand |
+| `install.sh copilot` | `.github/skills/iceberg/SKILL.md` | On demand |
+| `install.sh agents` | `.agents/skills/iceberg/SKILL.md` | On demand in compatible agents |
 
-Only the two `UserPromptSubmit` rows can swap rule files mid-session, so only they
-get the strong form of `-a`. Everywhere else `-a` is rule 8 of the static block —
-same behaviour, weaker grip, because the four-line rules stay in the context
-alongside it.
+Skill locations follow the [Cursor](https://prod.cursor.com/docs/skills),
+[Windsurf](https://docs.windsurf.com/windsurf/cascade/skills), and
+[GitHub Copilot](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills)
+documentation. `agents` uses the shared directory supported by the
+[skills installer](https://github.com/vercel-labs/skills).
 
-Per-turn beats read-once. A static instruction file sits a hundred messages back in the context by the time it matters.
+The hook owns routing; its two prompt files each describe one answer mode.
+The standalone skill carries both modes and their triggers because it has no
+hook to select a file. Use one approach per agent session to avoid loading both.
 
 Codex takes the same `UserPromptSubmit` event and the same handler shape as Claude Code, and calls the same `hooks/inject.sh`. The script resolves its rule file — `short.md`, or `long.md` on a `-a` turn — from its own location, so neither agent has to interpolate a root variable into a `cat` argument.
 
-**Codex keeps hooks in one place, and it is not your project.** Tested against `codex-cli 0.153.2`: a project `.codex/hooks.json` fires nothing, and so does a project `.codex/config.toml`. The handler has to live in `$CODEX_HOME/config.toml` — `~/.codex/config.toml` by default. Earlier iceberg releases wrote the project file, so Codex users got the `AGENTS.md` block and nothing else. `install.sh codex` now writes a marked block into the Codex config, and removes the dead project file if it finds one.
+**Codex keeps hooks in one place, and it is not your project.** Tested against `codex-cli 0.153.2`: a project `.codex/hooks.json` fires nothing, and so does a project `.codex/config.toml`. The handler has to live in `$CODEX_HOME/config.toml` — `~/.codex/config.toml` by default. Earlier iceberg releases wrote the project file, so Codex users got the `AGENTS.md` block and nothing else. `install.sh codex` writes a marked block into the Codex config, removes the dead project hook file, and removes the old iceberg block from `AGENTS.md`. It does not add static instructions.
 
 **Codex will not run a hook you have not approved.** Every handler carries a trust hash that Codex computes itself, and an unapproved handler is skipped in silence — no warning, no output. No installer can forge that hash, and iceberg does not try. Run `install.sh codex`, open Codex, approve the iceberg hook once.
 
@@ -201,9 +213,20 @@ Because the config is user-scoped, `install.sh codex` is the one target that rea
 
 The Codex *plugin* route carries the skill only. `codex features list` reports `plugin_hooks` as **removed**, so the `hooks` key in `.codex-plugin/plugin.json` is inert on 0.153.2 — the marketplace install gives you the rules, and `install.sh codex` gives you the per-turn swap.
 
-Cursor is the exception. It has no `UserPromptSubmit`; `beforeSubmitPrompt` fires every turn but returns only `continue` and `user_message`, so it can block your prompt and never add to it. Only `sessionStart` and `postToolUse` can return `additional_context`.
+### Upgrading a script install
 
-So `install.sh cursor` lays down two layers: the `alwaysApply` rule, which the editor re-sends turn to turn, and a `sessionStart` hook that puts a copy at the front of the system context. If you already have a `.cursor/hooks.json`, the installer leaves it alone and prints the one line to add.
+Pull the repo and re-run the same target (`install.sh codex`, `cursor`,
+`windsurf`, `copilot`, or `agents`). The installer replaces its old static setup:
+
+- Codex removes the marked iceberg block from `AGENTS.md`, keeping user text.
+- Cursor installs the skill and removes iceberg's old rule and hook entries.
+- Windsurf, Copilot, and `agents` install the skill and remove their old marked blocks.
+
+Skill installs now load on demand. Activate iceberg in a new session after
+upgrading. Cursor's old hook script remains as an inert compatibility stub;
+Python 3 is needed only to remove its old JSON registration safely while keeping
+other hooks. Without Python 3, the installer leaves the inert registration in place.
+Skills installed by another tool are left alone; update those with that tool.
 
 ## Does it work
 
@@ -232,11 +255,14 @@ a named thing to omit get you replies 83% shorter than your agent's default — 
 87% shorter than the concision ask most people reach for first.
 
 Token counts come straight from `usage.output_tokens`. Every raw reply is in
-`evals/snapshot.json`. Reproduce it with `python3 evals/run.py` — about $2 on
+`evals/snapshot-short.json`. Reproduce it with `python3 evals/run.py` — about $2 on
 Sonnet.
 
-Those numbers cover the four-line path. `-a` is not in the eval yet — it is a
-different job, and counting its tokens against the terse arm would measure nothing.
+These are historical output-token measurements, not a benchmark of the current
+trimmed prompts or their input-token savings.
+
+Those numbers cover the four-line path. The separate `-a` suite and its
+results are documented in [`evals/README.md`](./evals/README.md).
 
 Caveat worth reading: absolute counts swing hard between runs (baseline came back
 367, 650, 596 on identical inputs). The ratios held. [`evals/README.md`](./evals)
@@ -269,19 +295,20 @@ The skill is a plain file, so re-running `npx skills add hellohelen-ai/iceberg`
 overwrites it with the current version. `install.sh` is re-runnable for the same
 reason.
 
-If you cloned the repo, `git pull` is enough — the hook reads `short.md` off
-disk on every turn, so nothing is cached.
+If you cloned the repo, `git pull` updates hook prompts on disk. Re-run
+`install.sh <target>` to migrate an older static install or refresh a copied skill.
 
 ## Customize
 
-Three files, and they say the same thing in three lengths:
+Three files with separate jobs:
 
 - `short.md` — the short form the hook injects on a normal turn
 - `long.md` — what the hook injects instead on a `-a` turn
-- `skills/iceberg/SKILL.md` — the long form an agent loads on demand
+- `skills/iceberg/SKILL.md` — the standalone skill, with both modes and their triggers
 
-Edit any of them. Change the line limit, drop rule 5, move `-a` to `-v`, add your
-own. That is the whole product.
+Edit the file for your install path. To change the hook flag, edit the matcher
+in `hooks/inject.sh`; changing a prompt does not change routing. To change the
+standalone flag, edit the skill. Re-run the installer after editing a copied skill.
 
 ## Why "iceberg"
 
